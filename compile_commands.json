@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/philipp/projekte/spacegame",
+  "command": "/nix/store/3y394dm6z9mawg2qbf4x4cr5rkr04zq7-clang-wrapper-7.1.0/bin/clang++   -I/nix/store/a978lv5q12zphdn6pirzh8h5gwi0npq7-SDL2-2.0.10-dev/include/SDL2    -Wall -Wextra -std=gnu++17 -o CMakeFiles/spacegame.dir/main.cpp.o -c /home/philipp/projekte/spacegame/main.cpp",
+  "file": "/home/philipp/projekte/spacegame/main.cpp"
+}
+]
