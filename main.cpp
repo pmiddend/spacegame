@@ -1,38 +1,21 @@
 #include "math.hpp"
 #include "sdl.hpp"
+#include "types.hpp"
+#include "constants.hpp"
+#include "game_state.hpp"
 #include <SDL.h>
 #include <chrono>
-#include <cstdlib>
 #include <iostream>
 #include <map>
-#include <memory>
 #include <optional>
 #include <random>
 #include <vector>
 
 namespace {
-sg::IntVector const game_size{1024, 768};
-sg::IntVector const player_size{99, 75};
-sg::DoubleVector const player_speed{200, 200};
-using UpdateDiff = std::chrono::duration<double>;
-using RandomEngine = std::default_random_engine;
-
-// class TexturePart {
-// public:
-//   TexturePart(
-//       std::filesystem::path const &_file_path,
-//       sg::IntRectangle const &_rectangle)
-//       : file_path_{_file_path}, rectangle_(_rectangle) {}
-//   std::filesystem::path const &file_path() const { return file_path_; }
-//   sg::IntRectangle const &rectangle() const { return rectangle_; }
-
-// private:
-//   std::filesystem::path file_path_;
-//   sg::IntRectangle rectangle_;
-// };
 
 std::filesystem::path const base_path{std::filesystem::path{"data"} / "PNG"};
 std::filesystem::path const ship_path{base_path / "playerShip1_blue.png"};
+std::filesystem::path const laser_path{base_path / "Lasers" / "laserBlue01.png"};
 std::filesystem::path const star_path{base_path / "star.png"};
 
 class TextureCache {
@@ -58,24 +41,6 @@ private:
   sg::SDLImageContext &_image_context;
   sg::SDLRenderer &_renderer;
   TextureMap _textures;
-};
-
-class GameState {
-public:
-  GameState();
-
-  sg::IntRectangle player_rect() const {
-    return sg::IntRectangle::from_pos_and_size(
-        sg::structure_cast<int>(player_position), player_size);
-  }
-
-  void add_player_v(sg::IntVector const &);
-
-  void update(std::chrono::duration<double> const &);
-
-private:
-  sg::DoubleVector player_position;
-  sg::IntVector player_v;
 };
 
 class Starfield {
@@ -155,28 +120,15 @@ private:
   LayersVector layers_;
 };
 
-GameState::GameState()
-    : player_position{sg::structure_cast<double>(
-          game_size / 2 - player_size / 2)},
-      player_v{0, 0} {}
-
-void GameState::add_player_v(sg::IntVector const &v) {
-  player_v = sg::IntVector{player_v.x() + v.x(), player_v.y() + v.y()};
-}
-
-void GameState::update(UpdateDiff const &diff_secs) {
-  double const secs = diff_secs.count();
-  player_position =
-      player_position +
-      player_speed *
-          (secs * sg::normalize(sg::structure_cast<double>(player_v)));
-}
-
-void draw(
+void draw_gamestate(
     GameState const &gs,
     sg::SDLRenderer &renderer,
     TextureCache &texture_cache) {
   renderer.copy(texture_cache.get_texture(ship_path), gs.player_rect());
+  for (GameState::ProjectileVector::value_type const &p : gs.projectiles()) {
+      renderer.copy(texture_cache.get_texture(laser_path),
+                    sg::IntRectangle::from_pos_and_size(sg::structure_cast<int>(p), projectile_size));
+  }
 }
 
 std::optional<sg::IntVector> key_to_direction(SDL_Keycode const &k) {
@@ -200,16 +152,15 @@ int main() {
   sg::SDLSurface ship_surface{image_context.load_surface(
       std::filesystem::path{"data"} / "PNG" / "playerShip1_blue.png")};
   sg::SDLTexture ship_texture{renderer.create_texture(ship_surface)};
-  bool done{false};
   GameState gs;
   TextureCache texture_cache{image_context, renderer};
   RandomEngine random_engine;
   Starfield star_field{random_engine};
   std::cout << "game start\n";
-  auto last_frame = std::chrono::system_clock::now();
+  auto last_frame = Clock::now();
   auto const target_fps = std::chrono::milliseconds{16};
-  while (!done) {
-    auto const this_frame{std::chrono::system_clock::now()};
+  while (true) {
+    auto const this_frame{Clock::now()};
     auto const time_delta{this_frame - last_frame};
     auto const wait_time{std::chrono::duration_cast<std::chrono::milliseconds>(
         target_fps - time_delta)};
@@ -222,10 +173,14 @@ int main() {
       if (e.value().type == SDL_KEYDOWN && e.value().key.repeat == 0) {
         if (e.value().key.keysym.sym == SDLK_ESCAPE)
           break;
+        if (e.value().key.keysym.sym == SDLK_SPACE)
+            gs.player_shooting(true);
         auto const direction = key_to_direction(e.value().key.keysym.sym);
         if (direction.has_value())
           gs.add_player_v(direction.value());
       } else if (e.value().type == SDL_KEYUP && e.value().key.repeat == 0) {
+          if (e.value().key.keysym.sym == SDLK_SPACE)
+              gs.player_shooting(false);
         auto const direction = key_to_direction(e.value().key.keysym.sym);
         if (direction.has_value())
           gs.add_player_v(-direction.value());
@@ -240,7 +195,7 @@ int main() {
     // star_field.draw(renderer, texture_cache.get_texture(star_path));
     renderer.clear();
     star_field.draw(renderer, texture_cache.get_texture(star_path));
-    draw(gs, renderer, texture_cache);
+      draw_gamestate(gs, renderer, texture_cache);
     renderer.present();
   }
 }
