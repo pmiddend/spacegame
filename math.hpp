@@ -115,6 +115,19 @@ private:
   T _bottom;
 };
 
+template <typename T>
+bool rect_intersect(Rectangle<T> const &outer, Rectangle<T> const &inner) {
+  auto const X1 = outer.left();
+  auto const X2 = inner.left();
+  auto const Y1 = outer.top();
+  auto const Y2 = inner.top();
+  auto const W1 = outer.w();
+  auto const W2 = inner.w();
+  auto const H1 = outer.h();
+  auto const H2 = inner.h();
+  return !(X1 + W1 < X2 || X2 + W2 < X1 || Y1 + H1 < Y2 || Y2 + H2 < Y1);
+}
+
 template <typename T, typename F>
 auto rect_map(Rectangle<T> const &r, F const &f)
     -> Rectangle<decltype(f(r.left()))> {
