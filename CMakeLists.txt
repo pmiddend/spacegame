@@ -13,6 +13,16 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED)
 find_package(SDL2_mixer REQUIRED)
-target_include_directories(spacegame PUBLIC ${SDL_INCLUDE_DIR} ${SDL2_IMAGE_INCLUDE_DIRS} ${SDL2_MIXER_INCLUDE_DIRS})
-target_link_libraries(spacegame ${SDL_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${SDL2_MIXER_LIBRARIES})
+find_package(SDL2_ttf REQUIRED)
+target_include_directories(spacegame PUBLIC
+${SDL_INCLUDE_DIR}
+${SDL2_IMAGE_INCLUDE_DIRS}
+${SDL2_MIXER_INCLUDE_DIRS}
+${SDL2_TTF_INCLUDE_DIRS}
+)
+target_link_libraries(spacegame
+${SDL_LIBRARIES}
+${SDL2_IMAGE_LIBRARIES}
+${SDL2_MIXER_LIBRARIES}
+${SDL_TTF_LIBRARIES})
 install(TARGETS spacegame DESTINATION bin)
