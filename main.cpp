@@ -21,6 +21,7 @@ std::filesystem::path const laser_path{png_path / "Lasers" / "laserBlue01.png"};
 std::filesystem::path const star_path{png_path / "star.png"};
 std::filesystem::path const background_music{base_path / "music.opus"};
 std::filesystem::path const pew_sound{base_path / "Bonus" / "sfx_laser1.wav"};
+std::filesystem::path const font_path{base_path / "Bonus" / "kenvector_future_thin.ttf"};
 
 void draw_gamestate(
     GameState const &gs,
@@ -51,6 +52,8 @@ int main() {
   sg::SDLMixerContext mixer_context{context};
   sg::SDLImageContext image_context;
   sg::SDLWindow window{context.create_window(game_size)};
+  sg::SDLTTFContext ttfcontext;
+  sg::SDLTTFFont main_font{ttfcontext.open_font(font_path, 15)};
   sg::SDLRenderer renderer{window.create_renderer(game_size)};
   sg::SDLSurface ship_surface{image_context.load_surface(
       std::filesystem::path{"data"} / "PNG" / "playerShip1_blue.png")};
@@ -98,7 +101,6 @@ int main() {
     }
     star_field.update(second_delta);
 
-    // star_field.draw(renderer, texture_cache.get_texture(star_path));
     renderer.clear();
     star_field.draw(renderer, texture_cache.get_texture(star_path));
       draw_gamestate(gs, renderer, texture_cache);

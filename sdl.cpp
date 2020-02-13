@@ -1,6 +1,7 @@
 #include "sdl.hpp"
 #include <SDL_image.h>
 #include <SDL_mixer.h>
+#include <SDL_ttf.h>
 #include <iostream>
 
 namespace {
@@ -187,4 +188,37 @@ sg::SDLMixerChunk sg::SDLMixerContext::load_chunk(std::filesystem::path const &p
 
 void sg::SDLMixerContext::play_chunk(SDLMixerChunk &chunk) {
     Mix_PlayChannel(-1, chunk.chunk(), 0);
+}
+
+sg::SDLTTFContext::SDLTTFContext() {
+  if (TTF_Init() == -1)
+    throw std::runtime_error{"couldn't init TTF: "+std::string{TTF_GetError()}};
+}
+
+sg::SDLTTFContext::~SDLTTFContext() {
+  TTF_Quit();
+}
+
+sg::SDLTTFFont sg::SDLTTFContext::open_font(std::filesystem::path const &p, unsigned const pt) {
+  TTF_Font * const font{TTF_OpenFont(p.c_str(), pt)};
+  if (font == nullptr)
+    throw std::runtime_error{"couldn't load "+p.string()+": "+std::string{TTF_GetError()}};
+  return SDLTTFFont{font};
+}
+
+
+sg::SDLTTFFont::SDLTTFFont(TTF_Font *_font): font_{_font} {
+}
+
+sg::SDLTTFFont::SDLTTFFont(SDLTTFFont &&other) {
+  font_ = other.font_;
+  other.font_ = nullptr;
+}
+
+sg::SDLSurface sg::SDLTTFFont::render_blended(std::string const &s, SDL_Color const &c) {
+  return SDLSurface{TTF_RenderUTF8_Blended(font_, s.c_str(), c)};
+}
+
+sg::SDLTTFFont::~SDLTTFFont() {
+  TTF_CloseFont(font_);
 }

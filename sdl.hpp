@@ -7,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include <SDL_mixer.h>
+#include <SDL_ttf.h>
 
 namespace sg {
 using IntVector = Vector<int>;
@@ -123,11 +124,31 @@ private:
 
 class SDLMixerChunk {
 public:
-    SDLMixerChunk(Mix_Chunk *);
-    SDLMixerChunk(SDLMixerChunk &&);
-    Mix_Chunk *chunk() { return chunk_; }
-    ~SDLMixerChunk();
+  SDLMixerChunk(Mix_Chunk *);
+  SDLMixerChunk(SDLMixerChunk &&);
+  Mix_Chunk *chunk() { return chunk_; }
+  ~SDLMixerChunk();
 private:
-    Mix_Chunk *chunk_;
+  Mix_Chunk *chunk_;
+};
+
+class SDLTTFFont;
+
+class SDLTTFContext {
+public:
+  SDLTTFContext();
+  SDLTTFFont open_font(std::filesystem::path const &, unsigned size);
+  ~SDLTTFContext();
+};
+
+class SDLTTFFont {
+public:
+  SDLTTFFont(TTF_Font *);
+  SDLTTFFont(SDLTTFFont &&);
+  TTF_Font *font() { return font_; }
+  SDLSurface render_blended(std::string const &, SDL_Color const &);
+  ~SDLTTFFont();
+private:
+  TTF_Font *font_;
 };
 } // namespace sg
