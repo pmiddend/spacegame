@@ -1,5 +1,6 @@
 #include "sdl.hpp"
 #include <SDL_image.h>
+#include <SDL_mixer.h>
 #include <iostream>
 
 namespace {
@@ -35,6 +36,12 @@ sg::SDLTexture::SDLTexture(SDL_Texture *const _texture)
 sg::SDLTexture::SDLTexture(SDLTexture &&_texture)
     : _texture(_texture._texture), _size(_texture._size) {
   _texture._texture = nullptr;
+}
+
+sg::SDLTexture &sg::SDLTexture::operator=(SDLTexture &&other) {
+    _texture = other._texture;
+    other._texture = nullptr;
+    return *this;
 }
 
 sg::SDLSurface::SDLSurface(SDLSurface &&o) : _surface(o._surface) {
@@ -77,7 +84,7 @@ sg::SDLImageContext::SDLImageContext() {
 sg::SDLImageContext::~SDLImageContext() { IMG_Quit(); }
 
 sg::SDLContext::SDLContext() {
-  if (SDL_Init(SDL_INIT_VIDEO) < 0)
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
     throw std::runtime_error{"couldn't initialize SDL: " +
                              std::string{SDL_GetError()}};
 }
@@ -100,7 +107,7 @@ sg::SDLWindow sg::SDLContext::create_window(IntVector const &v) {
       SDL_WINDOWPOS_UNDEFINED,
       v.x(),
       v.y(),
-      SDL_WINDOW_SHOWN)};
+      SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE)};
   if (window == nullptr)
     throw std::runtime_error{"couldn't initialize window: " +
                              std::string{SDL_GetError()}};
@@ -131,3 +138,53 @@ void sg::SDLRenderer::copy(SDLTexture &t, IntRectangle const &r) {
   SDL_RenderCopy(_renderer, t.texture(), nullptr, &dest_rect);
 }
 void sg::SDLRenderer::present() { SDL_RenderPresent(_renderer); }
+
+sg::SDLMixerContext::SDLMixerContext(SDLContext const &): lib_inited_{false}, music_{nullptr} {
+    if (Mix_Init(MIX_INIT_OPUS) != MIX_INIT_OPUS)
+        throw std::runtime_error{"couldn't initialize SDL mixer: " + std::string{Mix_GetError()}};
+    lib_inited_ = true;
+
+    if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1)
+        throw std::runtime_error{"couldn't open audio in SDL mixer: " + std::string{Mix_GetError()}};
+}
+
+sg::SDLMixerContext::~SDLMixerContext() {
+    if (lib_inited_)
+        Mix_CloseAudio();
+    Mix_Quit();
+}
+
+void sg::SDLMixerContext::play_music(std::filesystem::path const &p) {
+    if (music_ != nullptr) {
+        Mix_FreeMusic(music_);
+        music_ = nullptr;
+    }
+    music_ = Mix_LoadMUS(p.c_str());
+    if (music_ == nullptr)
+        throw std::runtime_error{"couldn't load music " + p.string() + ": " + std::string{Mix_GetError()}};
+    if (Mix_PlayMusic(music_, -1) == -1)
+        throw std::runtime_error{"couldn't play music " + p.string() + ": " + std::string{Mix_GetError()}};
+    Mix_VolumeMusic(MIX_MAX_VOLUME / 10);
+}
+
+sg::SDLMixerChunk::SDLMixerChunk(Mix_Chunk *_chunk): chunk_(_chunk) {
+}
+
+sg::SDLMixerChunk::SDLMixerChunk(SDLMixerChunk &&other): chunk_(other.chunk_) {
+    other.chunk_ = nullptr;
+}
+
+sg::SDLMixerChunk::~SDLMixerChunk() {
+    Mix_FreeChunk(chunk_);
+}
+
+sg::SDLMixerChunk sg::SDLMixerContext::load_chunk(std::filesystem::path const &p) {
+    Mix_Chunk *const chunk = Mix_LoadWAV(p.c_str());
+    if (chunk == nullptr)
+        throw std::runtime_error{"couldn't load "+p.string()+": "+std::string{Mix_GetError()}};
+    return sg::SDLMixerChunk(chunk);
+}
+
+void sg::SDLMixerContext::play_chunk(SDLMixerChunk &chunk) {
+    Mix_PlayChannel(-1, chunk.chunk(), 0);
+}

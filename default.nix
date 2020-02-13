@@ -6,5 +6,5 @@ in pkgs.clangStdenv.mkDerivation rec {
   src = ./.;
 
   nativeBuildInputs = [ pkgs.cmake ];
-  buildInputs = [ pkgs.SDL2 pkgs.SDL2_image pkgs.SDL2_ttf pkgs.clang-tools pkgs.cppcheck pkgs.inotify-tools pkgs.ninja pkgs.ccls ];
+  buildInputs = [ pkgs.SDL2 pkgs.SDL2_image pkgs.SDL2_mixer pkgs.SDL2_ttf pkgs.clang-tools pkgs.cppcheck pkgs.inotify-tools pkgs.ninja pkgs.ccls pkgs.jetbrains.clion pkgs.gdb ];
 }

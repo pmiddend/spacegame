@@ -6,6 +6,12 @@
 #include "constants.hpp"
 #include <vector>
 
+enum class GameEvent {
+  PlayerShot
+};
+
+using EventList = std::vector<GameEvent>;
+
 class GameState {
 public:
     using ProjectileVector = std::vector<sg::DoubleVector>;
@@ -19,7 +25,7 @@ public:
 
     void add_player_v(sg::IntVector const &);
 
-    void update(std::chrono::duration<double> const &);
+    EventList update(std::chrono::duration<double> const &);
 
     void player_shooting(bool b);
 

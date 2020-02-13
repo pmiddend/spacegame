@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <memory>
 #include <optional>
+#include <SDL_mixer.h>
 
 namespace sg {
 using IntVector = Vector<int>;
@@ -15,14 +16,19 @@ class SDLTexture {
 public:
   explicit SDLTexture(SDL_Texture *);
 
-  SDLTexture(SDLTexture &&);
-
   SDL_Texture *texture() { return _texture; }
 
   IntVector size() const { return _size; }
 
-  ~SDLTexture();
+/*
+  SDLTexture(SDLTexture &) = delete;
+*/
+  SDLTexture &operator=(SDLTexture const &texture) = delete;
 
+  SDLTexture(SDLTexture &&);
+  SDLTexture &operator=(SDLTexture &&);
+
+  ~SDLTexture();
 private:
   SDL_Texture *_texture;
   IntVector _size;
@@ -98,5 +104,30 @@ public:
   std::optional<SDL_Event> wait_event(std::chrono::milliseconds const &);
 
   SDLWindow create_window(IntVector const &);
+};
+
+class SDLMixerChunk;
+
+class SDLMixerContext {
+public:
+    SDLMixerContext(SDLContext const &);
+    ~SDLMixerContext();
+
+    void play_music(std::filesystem::path const &);
+    SDLMixerChunk load_chunk(std::filesystem::path const &);
+    void play_chunk(SDLMixerChunk &);
+private:
+    bool lib_inited_;
+    Mix_Music *music_;
+};
+
+class SDLMixerChunk {
+public:
+    SDLMixerChunk(Mix_Chunk *);
+    SDLMixerChunk(SDLMixerChunk &&);
+    Mix_Chunk *chunk() { return chunk_; }
+    ~SDLMixerChunk();
+private:
+    Mix_Chunk *chunk_;
 };
 } // namespace sg
