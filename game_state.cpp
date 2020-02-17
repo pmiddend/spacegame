@@ -1,16 +1,33 @@
 #include <algorithm>
 #include "game_state.hpp"
 
-GameState::GameState()
-        : player_position_{sg::structure_cast<double>(
-        game_size / 2 - player_size / 2)},
-          player_v_{0, 0}, player_shooting_{false} {}
+GameState::GameState(RandomEngine &_random_engine)
+        : random_engine_(_random_engine),
+          player_position_{sg::structure_cast<double>(
+                  game_size / 2 - player_size / 2)},
+          player_v_{0, 0},
+          player_shooting_{false},
+          spawns_{EnemySpawn{EnemyType::Asteroid, std::chrono::milliseconds{2000}}},
+          game_start_{Clock::now()},
+          asteroids_{} {}
 
 void GameState::add_player_v(sg::IntVector const &v) {
   player_v_ = sg::IntVector{player_v_.x() + v.x(), player_v_.y() + v.y()};
 }
 
 EventList GameState::update(UpdateDiff const &diff_secs) {
+  auto const elapsed_time = Clock::now() - game_start_;
+  for (SpawnList::iterator it{spawns_.begin()}; it != spawns_.end(); ++it) {
+    if (it->spawn_after > elapsed_time)
+      break;
+    if (it->type == EnemyType::Asteroid) {
+      // FIXME
+/*
+
+      asteroids_.push_back(Asteroid{});
+*/
+    }
+  }
   auto result = EventList{};
   double const secs = diff_secs.count();
   player_position_ =

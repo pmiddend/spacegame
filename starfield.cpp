@@ -55,14 +55,14 @@ void Starfield::update(UpdateDiff const &d) {
     }
 }
 
-void Starfield::draw(sg::SDLRenderer &renderer, sg::SDLTexture &texture) {
+void Starfield::draw(sg::SDLRenderer &renderer, Atlas const &atlas, std::string const &atlas_image) {
     LayersVector::size_type layer_index{layers_.size() - 1};
     for (LayersVector::const_reverse_iterator layer_it{layers_.crbegin()}; layer_it != layers_.crend(); ++layer_it) {
         auto const star_size{star_size_per_layer(layer_index)};
         for (sg::DoubleVector const &pos : (*layer_it)) {
             sg::IntRectangle const star_rect{sg::IntRectangle::from_pos_and_size(
                     sg::structure_cast<int>(pos), star_size)};
-            renderer.copy(texture, star_rect);
+            atlas.render_tile(renderer, atlas_image, star_rect);
         }
         layer_index--;
     }

@@ -59,7 +59,8 @@ public:
 
   SDLTexture create_texture(SDLSurface &);
   void clear();
-  void copy(SDLTexture &, IntRectangle const &);
+  void copy_whole(SDLTexture &, IntRectangle const &);
+  void copy(SDLTexture &, IntRectangle const &from, IntRectangle const &to);
   void present();
 
   ~SDLRenderer();

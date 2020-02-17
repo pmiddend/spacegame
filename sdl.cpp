@@ -134,9 +134,14 @@ sg::SDLTexture sg::SDLRenderer::create_texture(SDLSurface &s) {
 }
 
 void sg::SDLRenderer::clear() { SDL_RenderClear(_renderer); }
-void sg::SDLRenderer::copy(SDLTexture &t, IntRectangle const &r) {
+void sg::SDLRenderer::copy_whole(SDLTexture &t, IntRectangle const &r) {
   auto const dest_rect = to_sdl_rect(r);
   SDL_RenderCopy(_renderer, t.texture(), nullptr, &dest_rect);
+}
+void sg::SDLRenderer::copy(SDLTexture &t, IntRectangle const &from, IntRectangle const &to) {
+  auto const from_rect = to_sdl_rect(from);
+  auto const to_rect = to_sdl_rect(to);
+  SDL_RenderCopy(_renderer, t.texture(), &from_rect, &to_rect);
 }
 void sg::SDLRenderer::present() { SDL_RenderPresent(_renderer); }
 
