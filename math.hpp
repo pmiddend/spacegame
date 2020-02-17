@@ -15,6 +15,12 @@ public:
 
   Vector<T> operator-() const { return Vector(-_x, -_y); }
 
+  Vector<T> &operator+=(Vector<T> const &b) {
+    _x += b._x;
+    _y += b._y;
+    return *this;
+  }
+
 private:
   T _x;
   T _y;
@@ -61,11 +67,6 @@ Vector<T> operator*(Vector<T> const &a, Vector<T> const &b) {
 template <typename T>
 Vector<T> operator*(T const &a, Vector<T> const &b) {
   return Vector(a * b.x(), a * b.y());
-}
-
-template <typename T>
-Vector<T> operator+=(Vector<T> const &a, Vector<T> const &b) {
-  return a + b;
 }
 
 template <typename T>

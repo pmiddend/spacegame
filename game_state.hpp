@@ -9,19 +9,28 @@
 #include <list>
 
 namespace sg {
+using Health = int;
+
 enum class GameEvent {
   PlayerShot
 };
 enum class EnemyType {
-  Asteroid
+  AsteroidMedium
 };
 struct EnemySpawn {
   EnemyType type;
   std::chrono::milliseconds spawn_after;
+  DoubleVector spawn_position;
 };
+
 struct Asteroid {
   DoubleVector position;
   IntVector size;
+  EnemyType type;
+  Health health;
+
+  Asteroid(const sg::DoubleVector &position, const sg::IntVector &size, EnemyType const &type, Health const health)
+          : position(position), size(size), type(type), health(health) {}
 };
 
 using EventList = std::vector<sg::GameEvent>;
@@ -46,8 +55,6 @@ public:
 
   void player_shooting(bool b);
 
-  [[nodiscard]] ProjectileVector const &projectiles() const { return projectiles_; }
-
   RenderObjectList draw();
 
 private:
@@ -61,7 +68,8 @@ private:
   ProjectileVector projectiles_;
   AsteroidVector asteroids_;
 
-  void spawn_projectile();
+  void process_spawns(
+          Clock::time_point::duration const &);
 };
 }
 

@@ -9,6 +9,7 @@ sg::IntRectangle const game_rect{sg::IntRectangle::from_pos_and_size(sg::IntVect
 sg::IntVector const player_size{50, 32};
 sg::IntVector const projectile_size{4, 26};
 sg::DoubleVector const player_speed{200, 200};
+sg::DoubleVector const asteroid_medium_speed{0, 200};
 double const projectile_speed{-300};
 sg::texture_path const ship_path{"playerShip1_blue.png"};
 sg::texture_path const laser_path{"laserBlue01.png"};

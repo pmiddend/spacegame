@@ -133,9 +133,9 @@ int main() {
     star_field.update(second_delta);
 
     renderer.clear();
-    for (auto rob : star_field.draw())
+    for (auto const &rob : star_field.draw())
       std::visit(RenderObjectVisitor(renderer, main_atlas), rob);
-    for (auto rob : gs.draw())
+    for (const auto& rob : gs.draw())
       std::visit(RenderObjectVisitor(renderer, main_atlas), rob);
     renderer.present();
   }
