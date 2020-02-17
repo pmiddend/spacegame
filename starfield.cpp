@@ -25,7 +25,7 @@ sg::DoubleVector sg::Starfield::random_position() {
 
 sg::DoubleVector sg::Starfield::random_top_position(unsigned const layer_index) {
     return sg::DoubleVector{distribution_x(random_engine_),
-                            -star_size_per_layer(layer_index).y()};
+                            -static_cast<double>(star_size_per_layer(layer_index).y())};
 }
 
 sg::Starfield::Starfield(RandomEngine &_random_engine)
@@ -56,7 +56,7 @@ void sg::Starfield::update(UpdateDiff const &d) {
     }
 }
 
-void sg::Starfield::draw(sg::SDLRenderer &renderer, sg::Atlas const &atlas, std::string const &atlas_image) {
+void sg::Starfield::draw(sg::SDLRenderer &renderer, sg::Atlas const &atlas, texture_path const &atlas_image) {
     LayersVector::size_type layer_index{layers_.size() - 1};
     for (LayersVector::const_reverse_iterator layer_it{layers_.crbegin()}; layer_it != layers_.crend(); ++layer_it) {
         auto const star_size{star_size_per_layer(layer_index)};

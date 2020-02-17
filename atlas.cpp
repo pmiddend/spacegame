@@ -13,7 +13,7 @@ sg::Atlas::Atlas(TextureCache &textures, std::filesystem::path f) : texture_(tex
   for (auto el : frames->items()) {
     auto const frame = el.value().find("frame");
     if (frame == el.value().end())
-      throw std::runtime_error{"couldn't find \"frame\" inside \"" + el.key() + "\" inside " + json_path.string()};
+      throw std::runtime_error{R"(couldn't find "frame" inside ")" + el.key() + "\" inside " + json_path.string()};
     atlas_.insert(
             AtlasMap::value_type{el.key(), sg::IntRectangle::from_pos_and_size(
                     sg::IntVector{frame->at("x").get<int>(), frame->at("y")},
@@ -21,6 +21,6 @@ sg::Atlas::Atlas(TextureCache &textures, std::filesystem::path f) : texture_(tex
   }
 }
 
-void sg::Atlas::render_tile(sg::SDLRenderer &renderer, const std::string &tile, const sg::IntRectangle &to) const {
-  renderer.copy(texture_, atlas_.at(tile), to);
+void sg::Atlas::render_tile(sg::SDLRenderer &renderer, texture_path const &tile, const sg::IntRectangle &to) const {
+  renderer.copy(texture_, atlas_.at(tile.path), to);
 }

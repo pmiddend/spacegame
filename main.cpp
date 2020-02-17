@@ -5,6 +5,7 @@
 #include "game_state.hpp"
 #include "starfield.hpp"
 #include "sound_cache.hpp"
+#include "texture_path.hpp"
 #include "texture_cache.hpp"
 #include "atlas.hpp"
 #include <SDL.h>
@@ -18,11 +19,11 @@ namespace {
 std::filesystem::path const base_path{std::filesystem::path{"data"}};
 std::filesystem::path const png_path{base_path / "PNG"};
 std::filesystem::path const main_atlas_path{png_path / "main-atlas.png"};
-std::string const ship_path{"playerShip1_blue.png"};
-std::string const laser_path{"laserBlue01.png"};
+sg::texture_path const ship_path{"playerShip1_blue.png"};
+sg::texture_path const laser_path{"laserBlue01.png"};
 std::filesystem::path const explosion_path{png_path / "explosion.png"};
 sg::IntVector const explosion_tile_size{64, 64};
-std::string const star_path{"star.png"};
+sg::texture_path const star_path{"star.png"};
 std::filesystem::path const background_music{base_path / "music.opus"};
 std::filesystem::path const pew_sound{base_path / "Bonus" / "sfx_laser1.wav"};
 std::filesystem::path const font_path{base_path / "Bonus" / "kenvector_future_thin.ttf"};

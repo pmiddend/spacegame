@@ -13,10 +13,10 @@ private:
 
 public:
     DoubleVector random_position();
-    DoubleVector random_top_position(unsigned const layer_index);
+    DoubleVector random_top_position(unsigned layer_index);
     explicit Starfield(RandomEngine &);
     void update(UpdateDiff const &);
-    void draw(SDLRenderer &, Atlas const &, std::string const &);
+    void draw(SDLRenderer &, Atlas const &, texture_path const &);
 private:
     RandomEngine &random_engine_;
     std::uniform_real_distribution<double> distribution_x;
