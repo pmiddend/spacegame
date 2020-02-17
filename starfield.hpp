@@ -4,6 +4,7 @@
 #include "sdl.hpp"
 #include "types.hpp"
 #include "atlas.hpp"
+#include "render_object.hpp"
 
 namespace sg {
 class Starfield {
@@ -16,7 +17,7 @@ public:
     DoubleVector random_top_position(unsigned layer_index);
     explicit Starfield(RandomEngine &);
     void update(UpdateDiff const &);
-    void draw(SDLRenderer &, Atlas const &, texture_path const &);
+    RenderObjectList draw();
 private:
     RandomEngine &random_engine_;
     std::uniform_real_distribution<double> distribution_x;

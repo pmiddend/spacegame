@@ -65,3 +65,10 @@ void sg::GameState::spawn_projectile() {
 
 }
 
+
+sg::RenderObjectList sg::GameState::draw() {
+  sg::RenderObjectList result{sg::Image(player_rect(), ship_path)};
+  for (sg::GameState::ProjectileVector::value_type const &p : projectiles_)
+    result.push_back(Image{sg::IntRectangle::from_pos_and_size(sg::structure_cast<int>(p), projectile_size), laser_path});
+  return result;
+}

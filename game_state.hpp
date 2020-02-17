@@ -4,6 +4,7 @@
 #include "sdl.hpp"
 #include "types.hpp"
 #include "constants.hpp"
+#include "render_object.hpp"
 #include <vector>
 #include <list>
 
@@ -46,6 +47,8 @@ public:
   void player_shooting(bool b);
 
   [[nodiscard]] ProjectileVector const &projectiles() const { return projectiles_; }
+
+  RenderObjectList draw();
 
 private:
   RandomEngine &random_engine_;

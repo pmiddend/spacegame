@@ -5,39 +5,23 @@
 #include "game_state.hpp"
 #include "starfield.hpp"
 #include "sound_cache.hpp"
-#include "texture_path.hpp"
 #include "texture_cache.hpp"
 #include "atlas.hpp"
 #include <SDL.h>
 #include <chrono>
 #include <iostream>
 #include <optional>
-#include <vector>
 
 namespace {
 
 std::filesystem::path const base_path{std::filesystem::path{"data"}};
 std::filesystem::path const png_path{base_path / "PNG"};
 std::filesystem::path const main_atlas_path{png_path / "main-atlas.png"};
-sg::texture_path const ship_path{"playerShip1_blue.png"};
-sg::texture_path const laser_path{"laserBlue01.png"};
 std::filesystem::path const explosion_path{png_path / "explosion.png"};
 sg::IntVector const explosion_tile_size{64, 64};
-sg::texture_path const star_path{"star.png"};
 std::filesystem::path const background_music{base_path / "music.opus"};
 std::filesystem::path const pew_sound{base_path / "Bonus" / "sfx_laser1.wav"};
 std::filesystem::path const font_path{base_path / "Bonus" / "kenvector_future_thin.ttf"};
-
-void draw_gamestate(
-        sg::GameState const &gs,
-        sg::Atlas const &main_atlas,
-        sg::SDLRenderer &renderer) {
-  main_atlas.render_tile(renderer, ship_path, gs.player_rect());
-  for (sg::GameState::ProjectileVector::value_type const &p : gs.projectiles()) {
-    main_atlas.render_tile(renderer, laser_path,
-                           sg::IntRectangle::from_pos_and_size(sg::structure_cast<int>(p), projectile_size));
-  }
-}
 
 std::optional<sg::IntVector> key_to_direction(SDL_Keycode const &k) {
   if (k == SDLK_a)
@@ -69,9 +53,28 @@ Animation::Animation(sg::SDLTexture &_texture, sg::IntVector const &_tile_size) 
 
 void Animation::render_nth_tile(sg::SDLRenderer &renderer, std::size_t const i, sg::IntRectangle const &target) const {
   int const per_row{texture_.size().x() / tile_size_.x()};
-  auto const pos = sg::IntVector{i % per_row, i / per_row} * tile_size_;
+  auto const pos = sg::IntVector{static_cast<int>(i % per_row), static_cast<int>(i / per_row)} * tile_size_;
   renderer.copy(texture_, sg::IntRectangle::from_pos_and_size(pos, tile_size_), target);
 }
+
+struct RenderObjectVisitor {
+  sg::SDLRenderer &renderer;
+  sg::Atlas &main_atlas;
+
+  RenderObjectVisitor(sg::SDLRenderer &renderer, sg::Atlas &mainAtlas) : renderer(renderer), main_atlas(mainAtlas) {}
+
+  void operator()(sg::Image const &image) const {
+    main_atlas.render_tile(renderer, image.texture, image.rectangle);
+  }
+
+  void operator()(sg::Solid const &) const {
+
+  }
+
+  void operator()(sg::Text const &) const {
+
+  }
+};
 } // namespace
 
 int main() {
@@ -125,16 +128,15 @@ int main() {
 
     auto const second_delta{
             std::chrono::duration_cast<std::chrono::duration<double>>(time_delta)};
-    for (sg::GameEvent const &e : gs.update(second_delta)) {
+    for (sg::GameEvent const &e : gs.update(second_delta))
       sound_cache.play_chunk(pew_sound);
-    }
     star_field.update(second_delta);
 
     renderer.clear();
-    star_field.draw(renderer, main_atlas, star_path);
-    draw_gamestate(gs, main_atlas, renderer);
-    explosion_animation.render_nth_tile(renderer, 4, sg::IntRectangle::from_pos_and_size(sg::IntVector{200, 200},
-                                                                                         sg::IntVector{64, 64}));
+    for (auto rob : star_field.draw())
+      std::visit(RenderObjectVisitor(renderer, main_atlas), rob);
+    for (auto rob : gs.draw())
+      std::visit(RenderObjectVisitor(renderer, main_atlas), rob);
     renderer.present();
   }
 }
