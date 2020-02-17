@@ -7,54 +7,52 @@
 #include <vector>
 #include <list>
 
+namespace sg {
 enum class GameEvent {
   PlayerShot
 };
-
-using EventList = std::vector<GameEvent>;
-
 enum class EnemyType {
   Asteroid
 };
-
 struct EnemySpawn {
   EnemyType type;
   std::chrono::milliseconds spawn_after;
 };
-
-using SpawnList = std::list<EnemySpawn>;
-
 struct Asteroid {
-  sg::DoubleVector position;
-  sg::IntVector size;
+  DoubleVector position;
+  IntVector size;
 };
+
+using EventList = std::vector<sg::GameEvent>;
+
+using SpawnList = std::list<sg::EnemySpawn>;
 
 class GameState {
 public:
-  using ProjectileVector = std::vector<sg::DoubleVector>;
+  using ProjectileVector = std::vector<DoubleVector>;
   using AsteroidVector = std::vector<Asteroid>;
 
-  GameState(RandomEngine &);
+  explicit GameState(RandomEngine &);
 
-  sg::IntRectangle player_rect() const {
+  [[nodiscard]] IntRectangle player_rect() const {
     return sg::IntRectangle::from_pos_and_size(
-            sg::structure_cast<int>(player_position_), player_size);
+            structure_cast<int>(player_position_), player_size);
   }
 
-  void add_player_v(sg::IntVector const &);
+  void add_player_v(IntVector const &);
 
   EventList update(std::chrono::duration<double> const &);
 
   void player_shooting(bool b);
 
-  ProjectileVector const &projectiles() const { return projectiles_; }
+  [[nodiscard]] ProjectileVector const &projectiles() const { return projectiles_; }
 
 private:
   RandomEngine &random_engine_;
   Clock::time_point game_start_;
   SpawnList spawns_;
-  sg::DoubleVector player_position_;
-  sg::IntVector player_v_;
+  DoubleVector player_position_;
+  IntVector player_v_;
   bool player_shooting_;
   std::optional<TimePoint> last_shot_;
   ProjectileVector projectiles_;
@@ -62,4 +60,5 @@ private:
 
   void spawn_projectile();
 };
+}
 

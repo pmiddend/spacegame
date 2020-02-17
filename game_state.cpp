@@ -1,26 +1,26 @@
 #include <algorithm>
 #include "game_state.hpp"
 
-GameState::GameState(RandomEngine &_random_engine)
+sg::GameState::GameState(RandomEngine &_random_engine)
         : random_engine_(_random_engine),
           player_position_{sg::structure_cast<double>(
                   game_size / 2 - player_size / 2)},
           player_v_{0, 0},
+          spawns_{EnemySpawn{sg::EnemyType::Asteroid, std::chrono::milliseconds{2000}}},
           player_shooting_{false},
-          spawns_{EnemySpawn{EnemyType::Asteroid, std::chrono::milliseconds{2000}}},
           game_start_{Clock::now()},
           asteroids_{} {}
 
-void GameState::add_player_v(sg::IntVector const &v) {
+void sg::GameState::add_player_v(sg::IntVector const &v) {
   player_v_ = sg::IntVector{player_v_.x() + v.x(), player_v_.y() + v.y()};
 }
 
-EventList GameState::update(UpdateDiff const &diff_secs) {
+sg::EventList sg::GameState::update(UpdateDiff const &diff_secs) {
   auto const elapsed_time = Clock::now() - game_start_;
   for (SpawnList::iterator it{spawns_.begin()}; it != spawns_.end(); ++it) {
     if (it->spawn_after > elapsed_time)
       break;
-    if (it->type == EnemyType::Asteroid) {
+    if (it->type == sg::EnemyType::Asteroid) {
       // FIXME
 /*
 
@@ -44,7 +44,7 @@ EventList GameState::update(UpdateDiff const &diff_secs) {
   auto const now = Clock::now();
   if (player_shooting_) {
     if (!last_shot_.has_value() || (now - last_shot_.value()) > std::chrono::milliseconds{500}) {
-      result.push_back(GameEvent::PlayerShot);
+      result.push_back(sg::GameEvent::PlayerShot);
       projectiles_.push_back(player_position_ + sg::DoubleVector{player_size.x() / 2, 0});
       last_shot_ = now;
     }
@@ -52,7 +52,7 @@ EventList GameState::update(UpdateDiff const &diff_secs) {
   return result;
 }
 
-void GameState::player_shooting(bool b) {
+void sg::GameState::player_shooting(bool b) {
   if (b == player_shooting_)
     return;
   player_shooting_ = b;
@@ -60,7 +60,7 @@ void GameState::player_shooting(bool b) {
     last_shot_ = std::nullopt;
 }
 
-void GameState::spawn_projectile() {
+void sg::GameState::spawn_projectile() {
   last_shot_ = Clock::now();
 
 }

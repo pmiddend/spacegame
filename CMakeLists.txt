@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(spacegame VERSION 1.0)
 
-add_executable(spacegame main.cpp sdl.cpp game_state.cpp types.hpp constants.hpp texture_cache.hpp starfield.hpp starfield.cpp sound_cache.hpp font_cache.cpp font_cache.hpp atlas.cpp atlas.hpp)
+add_executable(spacegame main.cpp sdl.cpp game_state.cpp types.hpp constants.hpp texture_cache.hpp starfield.hpp starfield.cpp sound_cache.hpp atlas.cpp atlas.hpp render_object.hpp texture_path.hpp game_state.hpp game_state.cpp)
 
 set_target_properties(spacegame PROPERTIES CXX_STANDARD 17)
 set_target_properties(spacegame PROPERTIES CXX_STANDARD_REQUIRED True)

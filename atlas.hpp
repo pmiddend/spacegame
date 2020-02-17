@@ -5,14 +5,16 @@
 #include <filesystem>
 #include "texture_cache.hpp"
 
+namespace sg {
 class Atlas {
 public:
-  using AtlasMap = std::map<std::string, sg::IntRectangle>;
+  using AtlasMap = std::map<std::string, IntRectangle>;
   Atlas(TextureCache &textures, std::filesystem::path);
 
-  void render_tile(sg::SDLRenderer &renderer, std::string const &, sg::IntRectangle const &) const;
+  void render_tile(SDLRenderer &renderer, std::string const &, IntRectangle const &) const;
 private:
-  sg::SDLTexture &texture_;
+  SDLTexture &texture_;
   AtlasMap atlas_;
 };
+}
 

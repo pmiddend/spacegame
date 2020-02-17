@@ -2,7 +2,7 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 
-Atlas::Atlas(TextureCache &textures, std::filesystem::path f) : texture_(textures.get_texture(f)), atlas_{} {
+sg::Atlas::Atlas(TextureCache &textures, std::filesystem::path f) : texture_(textures.get_texture(f)), atlas_{} {
   auto const json_path = f.replace_extension(".json");
   std::ifstream json_file{json_path};
   nlohmann::json atlas_json;
@@ -21,6 +21,6 @@ Atlas::Atlas(TextureCache &textures, std::filesystem::path f) : texture_(texture
   }
 }
 
-void Atlas::render_tile(sg::SDLRenderer &renderer, const std::string &tile, const sg::IntRectangle &to) const {
+void sg::Atlas::render_tile(sg::SDLRenderer &renderer, const std::string &tile, const sg::IntRectangle &to) const {
   renderer.copy(texture_, atlas_.at(tile), to);
 }

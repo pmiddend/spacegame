@@ -28,11 +28,11 @@ std::filesystem::path const pew_sound{base_path / "Bonus" / "sfx_laser1.wav"};
 std::filesystem::path const font_path{base_path / "Bonus" / "kenvector_future_thin.ttf"};
 
 void draw_gamestate(
-        GameState const &gs,
-        Atlas const &main_atlas,
+        sg::GameState const &gs,
+        sg::Atlas const &main_atlas,
         sg::SDLRenderer &renderer) {
   main_atlas.render_tile(renderer, ship_path, gs.player_rect());
-  for (GameState::ProjectileVector::value_type const &p : gs.projectiles()) {
+  for (sg::GameState::ProjectileVector::value_type const &p : gs.projectiles()) {
     main_atlas.render_tile(renderer, laser_path,
                            sg::IntRectangle::from_pos_and_size(sg::structure_cast<int>(p), projectile_size));
   }
@@ -84,12 +84,12 @@ int main() {
   sg::SDLSurface ship_surface{image_context.load_surface(
           std::filesystem::path{"data"} / "PNG" / "playerShip1_blue.png")};
   RandomEngine random_engine;
-  GameState gs{random_engine};
+  sg::GameState gs{random_engine};
   TextureCache texture_cache{image_context, renderer};
-  Atlas main_atlas{texture_cache, main_atlas_path};
+  sg::Atlas main_atlas{texture_cache, main_atlas_path};
   Animation explosion_animation{texture_cache.get_texture(explosion_path), explosion_tile_size};
-  SoundCache sound_cache{mixer_context};
-  Starfield star_field{random_engine};
+  sg::SoundCache sound_cache{mixer_context};
+  sg::Starfield star_field{random_engine};
   std::cout << "game start\n";
   mixer_context.play_music(background_music);
   auto last_frame = Clock::now();
@@ -124,7 +124,7 @@ int main() {
 
     auto const second_delta{
             std::chrono::duration_cast<std::chrono::duration<double>>(time_delta)};
-    for (GameEvent const &e : gs.update(second_delta)) {
+    for (sg::GameEvent const &e : gs.update(second_delta)) {
       sound_cache.play_chunk(pew_sound);
     }
     star_field.update(second_delta);
