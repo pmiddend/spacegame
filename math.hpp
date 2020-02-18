@@ -39,6 +39,11 @@ Vector<U> structure_cast(Vector<T> const &r) {
   return vmap(r, [](T const &t) { return static_cast<U>(t); });
 }
 
+template <typename U, typename T>
+Vector<U> rounding_cast(Vector<T> const &r) {
+  return vmap(r, [](T const &t) { return static_cast<U>(floor(t + 0.5)); });
+}
+
 template <typename T>
 T dot(Vector<T> const &r, Vector<T> const &s) {
   return r.x() * s.x() + r.y() * s.y();

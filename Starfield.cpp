@@ -71,7 +71,7 @@ sg::Starfield::draw() {
     auto const star_size{star_size_per_layer(layer_index)};
     for (sg::DoubleVector const &pos : (*layer_it)) {
       sg::IntRectangle const star_rect{sg::IntRectangle::from_pos_and_size(
-              sg::structure_cast<int>(pos), star_size)};
+              sg::rounding_cast<int>(pos), star_size)};
       result.push_back(Image{star_rect, main_atlas_path, star_path});
     }
     layer_index--;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "math.hpp"
+#include "util.hpp"
 #include <SDL.h>
 #include <chrono>
 #include <filesystem>
@@ -8,6 +9,7 @@
 #include <optional>
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
+#include <vector>
 
 namespace sg {
 class SDLTexture {
@@ -18,9 +20,7 @@ public:
 
   [[nodiscard]] IntVector size() const { return _size; }
 
-  SDLTexture(SDLTexture &) = delete;
-
-  SDLTexture &operator=(SDLTexture const &texture) = delete;
+  SG_NONCOPYABLE(SDLTexture);
 
   SDLTexture(SDLTexture &&) noexcept;
 
@@ -37,9 +37,7 @@ class SDLSurface {
 public:
   explicit SDLSurface(SDL_Surface *);
 
-  SDLSurface(SDLSurface &) = delete;
-
-  SDLSurface &operator=(SDLSurface const &) = delete;
+  SG_NONCOPYABLE(SDLSurface);
 
   SDLSurface(SDLSurface &&) noexcept;
 
@@ -57,13 +55,7 @@ class SDLRenderer {
 public:
   explicit SDLRenderer(SDL_Renderer *);
 
-  SDLRenderer(SDLRenderer &) = delete;
-
-  SDLRenderer &operator=(SDLRenderer const &) = delete;
-
-  SDLRenderer(SDLRenderer &&) = delete;
-
-  SDLRenderer &operator=(SDLRenderer &&) = delete;
+  SG_NONCOPYABLE(SDLRenderer); SG_NONMOVEABLE(SDLRenderer);
 
   SDLTexture create_texture(SDLSurface &);
 
@@ -87,13 +79,7 @@ class SDLWindow {
 public:
   explicit SDLWindow(SDL_Window *);
 
-  SDLWindow(SDLWindow &) = delete;
-
-  SDLWindow &operator=(SDLWindow const &) = delete;
-
-  SDLWindow(SDLWindow &&) = delete;
-
-  SDLWindow &operator=(SDLWindow &&) = delete;
+  SG_NONCOPYABLE(SDLWindow); SG_NONMOVEABLE(SDLWindow);
 
   ~SDLWindow();
 
@@ -104,14 +90,7 @@ private:
 };
 
 class SDLImageContext {
-public:
-  SDLImageContext(SDLImageContext const &) = delete;
-
-  SDLImageContext &operator=(SDLImageContext const &) = delete;
-
-  SDLImageContext(SDLImageContext &&) = delete;
-
-  SDLImageContext &operator=(SDLImageContext &&) = delete;
+public: SG_NONCOPYABLE(SDLImageContext); SG_NONMOVEABLE(SDLImageContext);
 
   SDLImageContext();
 
@@ -121,20 +100,13 @@ public:
 };
 
 class SDLContext {
-public:
-  SDLContext(SDLContext const &) = delete;
-
-  SDLContext &operator=(SDLContext const &) = delete;
-
-  SDLContext(SDLContext &&) = delete;
-
-  SDLContext &operator=(SDLContext &&) = delete;
+public: SG_NONCOPYABLE(SDLContext); SG_NONMOVEABLE(SDLContext);
 
   SDLContext();
 
   ~SDLContext();
 
-  std::optional<SDL_Event> wait_event(std::chrono::milliseconds const &);
+  std::vector<SDL_Event> wait_event(std::chrono::milliseconds const &);
 
   SDLWindow create_window(IntVector const &);
 };
@@ -142,14 +114,7 @@ public:
 class SDLMixerChunk;
 
 class SDLMixerContext {
-public:
-  SDLMixerContext(SDLMixerContext const &) = delete;
-
-  SDLMixerContext &operator=(SDLMixerContext const &) = delete;
-
-  SDLMixerContext(SDLMixerContext &&) = delete;
-
-  SDLMixerContext &operator=(SDLMixerContext &&) = delete;
+public: SG_NONCOPYABLE(SDLMixerContext); SG_NONMOVEABLE(SDLMixerContext);
 
   explicit SDLMixerContext(SDLContext const &);
 
@@ -167,12 +132,9 @@ private:
 };
 
 class SDLMixerChunk {
-public:
+public: SG_NONCOPYABLE(SDLMixerChunk);
+
   explicit SDLMixerChunk(Mix_Chunk *);
-
-  SDLMixerChunk(SDLMixerChunk const &) = delete;
-
-  SDLMixerChunk &operator=(SDLMixerChunk const &) = delete;
 
   SDLMixerChunk(SDLMixerChunk &&) noexcept;
 
@@ -189,16 +151,9 @@ private:
 class SDLTTFFont;
 
 class SDLTTFContext {
-public:
+public: SG_NONCOPYABLE(SDLTTFContext); SG_NONMOVEABLE(SDLTTFContext);
+
   SDLTTFContext();
-
-  SDLTTFContext(SDLTTFContext const &) = delete;
-
-  SDLTTFContext &operator=(SDLTTFContext const &) = delete;
-
-  SDLTTFContext(SDLTTFContext &&) = delete;
-
-  SDLTTFContext &operator=(SDLTTFContext &&) = delete;
 
   SDLTTFFont open_font(std::filesystem::path const &, unsigned size);
 
@@ -206,12 +161,9 @@ public:
 };
 
 class SDLTTFFont {
-public:
+public: SG_NONCOPYABLE(SDLTTFFont);
+
   explicit SDLTTFFont(TTF_Font *);
-
-  SDLTTFFont(SDLTTFFont const &) = delete;
-
-  SDLTTFFont &operator=(SDLTTFFont const &) = delete;
 
   SDLTTFFont(SDLTTFFont &&) noexcept;
 

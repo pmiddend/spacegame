@@ -147,11 +147,11 @@ void sg::GameState::player_shooting(bool const b) {
 sg::RenderObjectList sg::GameState::draw() {
   sg::RenderObjectList result{sg::Image(player_rect(), main_atlas_path, ship_path)};
   for (sg::GameState::ProjectileVector::value_type const &p : projectiles_)
-    result.push_back(Image{sg::IntRectangle::from_pos_and_size(sg::structure_cast<int>(p.position), projectile_size),
+    result.push_back(Image{sg::IntRectangle::from_pos_and_size(sg::rounding_cast<int>(p.position), projectile_size),
                            main_atlas_path,
                            laser_path});
   for (sg::GameState::AsteroidVector::value_type const &p : asteroids_)
-    result.push_back(Image{sg::IntRectangle::from_pos_and_size(sg::structure_cast<int>(p.position), p.size),
+    result.push_back(Image{sg::IntRectangle::from_pos_and_size(sg::rounding_cast<int>(p.position), p.size),
                            main_atlas_path,
                            asteroid_medium_path});
   result.push_back(sg::Text{score_font, "Score: " + std::to_string(score_), IntVector{0, 0}, score_color});

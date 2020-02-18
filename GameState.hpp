@@ -65,7 +65,7 @@ public:
 
   [[nodiscard]] IntRectangle player_rect() const {
     return sg::IntRectangle::from_pos_and_size(
-            structure_cast<int>(player_position_), player_size);
+            rounding_cast<int>(player_position_), player_size);
   }
 
   void add_player_v(IntVector const &);

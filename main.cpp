@@ -38,8 +38,8 @@ struct RenderObjectVisitor {
   sg::AtlasCache &atlas_cache;
   sg::FontCache &font_cache;
 
-  RenderObjectVisitor(sg::SDLRenderer &renderer, sg::AtlasCache &atlas_cache, sg::FontCache &font_cache)
-          : renderer{renderer}, atlas_cache{atlas_cache}, font_cache{font_cache} {}
+  RenderObjectVisitor(sg::SDLRenderer &renderer, sg::AtlasCache &atlas_cache, sg::FontCache &font_cache) : renderer{
+          renderer}, atlas_cache{atlas_cache}, font_cache{font_cache} {}
 
   void operator()(sg::Image const &image) const {
     atlas_cache.get(image.atlas).render_tile(renderer, image.texture, image.rectangle);
@@ -68,7 +68,7 @@ int main() {
   sg::SDLRenderer renderer{window.create_renderer(sg::game_size)};
   sg::RandomEngine random_engine;
   sg::GameState gs{random_engine, console};
-  TextureCache texture_cache{image_context, renderer};
+  sg::TextureCache texture_cache{image_context, renderer};
   sg::AtlasCache atlas_cache{texture_cache};
   sg::FontCache font_cache{ttfcontext, renderer};
   //Animation explosion_animation{texture_cache.get_texture(explosion_path), explosion_tile_size};
@@ -77,31 +77,35 @@ int main() {
   std::cout << "game start\n";
   mixer_context.play_music(background_music);
   auto last_frame = sg::Clock::now();
-  auto const target_fps = std::chrono::milliseconds{16};
-  while (true) {
+  auto const target_fps = std::chrono::milliseconds{10};
+  bool done{false};
+  while (!done) {
     auto const this_frame{sg::Clock::now()};
     auto const time_delta{this_frame - last_frame};
     auto const wait_time{std::chrono::duration_cast<std::chrono::milliseconds>(target_fps - time_delta)};
     last_frame = this_frame;
-    std::optional<SDL_Event> const e{context.wait_event(wait_time)};
-    if (e.has_value()) {
-      if (e.value().type == SDL_QUIT)
+    for (SDL_Event const &e : context.wait_event(wait_time)) {
+      if (e.type == SDL_QUIT) {
+        done = true;
         break;
+      }
 
-      if (e.value().type == SDL_KEYDOWN && e.value().key.repeat == 0) {
-        if (e.value().key.keysym.sym == SDLK_ESCAPE)
+      if (e.type == SDL_KEYDOWN && e.key.repeat == 0) {
+        if (e.key.keysym.sym == SDLK_ESCAPE) {
+          done = true;
           break;
-        if (e.value().key.keysym.sym == SDLK_BACKQUOTE)
+        }
+        if (e.key.keysym.sym == SDLK_BACKQUOTE)
           console.toggle();
-        if (e.value().key.keysym.sym == SDLK_SPACE)
+        if (e.key.keysym.sym == SDLK_SPACE)
           gs.player_shooting(true);
-        auto const direction = key_to_direction(e.value().key.keysym.sym);
+        auto const direction = key_to_direction(e.key.keysym.sym);
         if (direction.has_value())
           gs.add_player_v(direction.value());
-      } else if (e.value().type == SDL_KEYUP && e.value().key.repeat == 0) {
-        if (e.value().key.keysym.sym == SDLK_SPACE)
+      } else if (e.type == SDL_KEYUP && e.key.repeat == 0) {
+        if (e.key.keysym.sym == SDLK_SPACE)
           gs.player_shooting(false);
-        auto const direction = key_to_direction(e.value().key.keysym.sym);
+        auto const direction = key_to_direction(e.key.keysym.sym);
         if (direction.has_value())
           gs.add_player_v(-direction.value());
       }

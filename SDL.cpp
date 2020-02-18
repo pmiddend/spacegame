@@ -3,6 +3,8 @@
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
 #include <iostream>
+#include <vector>
+#include <thread>
 
 namespace {
 std::string sdl_error_string() {
@@ -97,13 +99,16 @@ sg::SDLContext::SDLContext() {
                              sdl_error_string()};
 }
 
-std::optional<SDL_Event>
+std::vector<SDL_Event>
 sg::SDLContext::wait_event(std::chrono::milliseconds const &s) {
-  SDL_Event e;
-  int const result{SDL_WaitEventTimeout(&e, std::max(0l, s.count()))};
-  if (result == 0)
-    return std::nullopt;
-  return e;
+  std::vector<SDL_Event> result;
+  SDL_Event event;
+  while (SDL_PollEvent(&event)) {
+    result.push_back(event);
+  }
+  if (result.empty())
+    std::this_thread::sleep_for(s);
+  return result;
 }
 
 sg::SDLContext::~SDLContext() { SDL_Quit(); }
