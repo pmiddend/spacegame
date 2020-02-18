@@ -3,9 +3,20 @@
 #include <fstream>
 #include <utility>
 
-sg::Atlas sg::Atlas::from_json(TextureCache &textures, std::filesystem::path const &png_file) {
+sg::Atlas sg::Atlas::from_descriptor(TextureCache &textures, const AtlasDescriptor &descriptor) {
+  if (descriptor.animation.has_value()) {
+    auto const animation = descriptor.animation.value();
+    SDLTexture &texture{textures.get_texture(descriptor.path)};
+    int const per_row{texture.size().x() / animation.tile_size.x()};
+    AtlasMap atlas;
+    for (unsigned i{0}; i < animation.tile_count; ++i) {
+      auto const pos{sg::IntVector{static_cast<int>(i % per_row), static_cast<int>(i / per_row)} * animation.tile_size};
+      atlas.insert(AtlasMap::value_type{std::to_string(i), IntRectangle::from_pos_and_size(pos, animation.tile_size)});
+    }
+    return Atlas{texture, atlas};
+  }
   AtlasMap atlas_;
-  auto const json_path = std::filesystem::path(png_file).replace_extension(".json");
+  auto const json_path = std::filesystem::path(descriptor.path).replace_extension(".json");
   std::ifstream json_file{json_path};
   nlohmann::json atlas_json;
   json_file >> atlas_json;
@@ -22,7 +33,7 @@ sg::Atlas sg::Atlas::from_json(TextureCache &textures, std::filesystem::path con
                                                                            sg::IntVector{frame->at("w"),
                                                                                          frame->at("h")})});
   }
-  return Atlas{textures.get_texture(png_file), atlas_};
+  return Atlas{textures.get_texture(descriptor.path), atlas_};
 }
 
 void sg::Atlas::render_tile(sg::SDLRenderer &renderer, TexturePath const &tile, const sg::IntRectangle &to) const {
@@ -43,19 +54,6 @@ sg::Atlas::Atlas(sg::SDLTexture &_texture, sg::Atlas::AtlasMap _atlas)
         : texture_{&_texture}, atlas_{std::move(_atlas)} {
 }
 
-sg::Atlas
-sg::Atlas::from_animation(TextureCache &textures, std::filesystem::path const &p, IntVector const &tile_size) {
-  SDLTexture &texture{textures.get_texture(p)};
-  int const per_row{texture.size().x() / tile_size.x()};
-  int const rows{texture.size().y() / tile_size.y()};
-  AtlasMap atlas;
-  for (int i{0}; i < per_row * rows; ++i) {
-    auto const pos{sg::IntVector{static_cast<int>(i % per_row), static_cast<int>(i / per_row)} * tile_size};
-    atlas.insert(AtlasMap::value_type{std::to_string(i), IntRectangle::from_pos_and_size(pos, tile_size)});
-  }
-  return Atlas{textures.get_texture(p), atlas};
-}
-
 sg::AtlasCache::AtlasCache(TextureCache &_textures) noexcept: textures_{_textures}, atlases_{} {
 
 }
@@ -64,8 +62,7 @@ sg::Atlas &sg::AtlasCache::get(const sg::AtlasDescriptor &d) {
   for (AtlasPair &p : this->atlases_)
     if (p.first == d)
       return p.second;
-  Atlas new_atlas{d.tile_size.has_value() ? Atlas::from_animation(this->textures_, d.path, d.tile_size.value())
-                                          : Atlas::from_json(this->textures_, d.path)};
-  this->atlases_.push_back(AtlasPair{d, std::move(new_atlas)});
+  Atlas new_atlas{Atlas::from_descriptor(this->textures_, d)};
+  this->atlases_.emplace_back(d, std::move(new_atlas));
   return this->atlases_.back().second;
 }

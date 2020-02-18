@@ -16,7 +16,7 @@ public:
     DoubleVector random_position();
     DoubleVector random_top_position(unsigned layer_index);
     explicit Starfield(RandomEngine &);
-    void update(UpdateDiff const &);
+    void update(IntUpdateDiff const &);
     RenderObjectList draw();
 private:
     RandomEngine &random_engine_;

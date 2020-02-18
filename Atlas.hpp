@@ -9,16 +9,32 @@
 #include "TexturePath.hpp"
 
 namespace sg {
+using AnimationDuration = std::chrono::milliseconds;
+
+class AnimationDescriptor {
+public:
+  IntVector tile_size;
+  unsigned tile_count;
+  AnimationDuration duration;
+
+  AnimationDescriptor(const IntVector &tile_size, unsigned int tile_count, AnimationDuration const &duration)
+          : tile_size{tile_size}, tile_count{tile_count}, duration{duration} {}
+
+  bool operator==(AnimationDescriptor const &o) const {
+    return tile_size == o.tile_size && tile_count == o.tile_count && duration == o.duration;
+  }
+};
+
 class AtlasDescriptor {
 public:
   std::filesystem::path path;
-  std::optional<IntVector> tile_size;
+  std::optional<AnimationDescriptor> animation;
 
-  AtlasDescriptor(std::filesystem::path path, const std::optional<IntVector> &tile_size)
-          : path{std::move(path)}, tile_size{tile_size} {}
+  AtlasDescriptor(std::filesystem::path path, const std::optional<AnimationDescriptor> &animation)
+          : path{std::move(path)}, animation{animation} {}
 
   bool operator==(AtlasDescriptor const &o) const {
-    return path == o.path && tile_size == o.tile_size;
+    return path == o.path && animation == o.animation;
   }
 };
 
@@ -36,9 +52,7 @@ public:
 
   Atlas &operator=(Atlas &&) noexcept;
 
-  static Atlas from_animation(TextureCache &textures, std::filesystem::path const &, IntVector const &tile_size);
-
-  static Atlas from_json(TextureCache &textures, std::filesystem::path const &);
+  static Atlas from_descriptor(TextureCache &textures, AtlasDescriptor const &);
 
   void render_tile(SDLRenderer &renderer, TexturePath const &, IntRectangle const &) const;
 

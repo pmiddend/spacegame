@@ -5,6 +5,7 @@
 #include "FontDescriptor.hpp"
 #include "Atlas.hpp"
 #include "types.hpp"
+#include "Animation.hpp"
 
 namespace sg {
 IntVector const game_size{1024, 768};
@@ -28,4 +29,5 @@ Color const score_color = {168, 176, 202, 255};
 std::filesystem::path const base_path{std::filesystem::path{"data"}};
 std::filesystem::path const png_path{base_path / "PNG"};
 AtlasDescriptor const main_atlas_path{png_path / "main-atlas.png", std::nullopt};
+AtlasDescriptor const explosion_animation{png_path / "explosion.png", AnimationDescriptor{IntVector{64, 64}, 32, std::chrono::milliseconds{1000}}};
 }

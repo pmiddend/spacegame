@@ -1,27 +1,23 @@
 #pragma once
 
+#include <utility>
+
 #include "RenderObject.hpp"
 #include "types.hpp"
 
 namespace sg {
-struct AnimationDescriptor {
-  SDLTexture *texture;
-  IntVector tile_size;
-  unsigned fps;
-
-  AnimationDescriptor(SDLTexture &texture, const IntVector &tile_size, unsigned int fps)
-          : texture{&texture}, tile_size{tile_size}, fps{fps} {
-  }
-};
-
 class Animation {
 public:
-  explicit Animation(AnimationDescriptor const &);
+  Animation(AtlasDescriptor, DoubleVector const &position);
 
-  void update(UpdateDiff const &);
+  void update(AnimationDuration const &);
   [[nodiscard]] RenderObjectList render() const;
+  [[nodiscard]] bool done() const;
+  void move(DoubleVector const &);
 private:
-  AnimationDescriptor descriptor_;
-  UpdateDiff current_;
+  AtlasDescriptor descriptor_;
+  DoubleVector position_;
+  AnimationDuration current_;
+  AnimationDescriptor animation_;
 };
 }

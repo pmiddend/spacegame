@@ -5,7 +5,8 @@
 #include <SDL.h>
 
 namespace sg {
-using UpdateDiff = std::chrono::duration<double>;
+using IntUpdateDiff = std::chrono::milliseconds;
+using DoubleUpdateDiff = std::chrono::duration<double>;
 using RandomEngine = std::default_random_engine;
 using Clock = std::chrono::high_resolution_clock;
 using TimePoint = Clock::time_point;

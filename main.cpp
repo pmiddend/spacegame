@@ -82,6 +82,7 @@ int main() {
   while (!done) {
     auto const this_frame{sg::Clock::now()};
     auto const time_delta{this_frame - last_frame};
+    auto const int_time_delta{std::chrono::duration_cast<sg::IntUpdateDiff >(time_delta)};
     auto const wait_time{std::chrono::duration_cast<std::chrono::milliseconds>(target_fps - time_delta)};
     last_frame = this_frame;
     for (SDL_Event const &e : context.wait_event(wait_time)) {
@@ -111,8 +112,7 @@ int main() {
       }
     }
 
-    auto const second_delta{std::chrono::duration_cast<std::chrono::duration<double>>(time_delta)};
-    for (sg::GameEvent const &ge : gs.update(second_delta)) {
+    for (sg::GameEvent const &ge : gs.update(int_time_delta)) {
       switch (ge) {
         case sg::GameEvent::PlayerShot:
           sound_cache.play_chunk(pew_sound);
@@ -122,7 +122,7 @@ int main() {
           break;
       }
     }
-    star_field.update(second_delta);
+    star_field.update(int_time_delta);
 
     renderer.clear();
     for (auto const &rob : star_field.draw())

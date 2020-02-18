@@ -54,11 +54,11 @@ void sg::GameState::add_player_v(sg::IntVector const &v) {
   player_v_ = sg::IntVector{player_v_.x() + v.x(), player_v_.y() + v.y()};
 }
 
-sg::EventList sg::GameState::update(UpdateDiff const &diff_secs) {
+sg::EventList sg::GameState::update(IntUpdateDiff const &diff_secs) {
   auto const elapsed_time = Clock::now() - game_start_;
   process_spawns(elapsed_time);
   auto result = EventList{};
-  double const secs{diff_secs.count()};
+  double const secs{std::chrono::duration_cast<DoubleUpdateDiff>(diff_secs).count()};
 
   // Move player
   player_position_ += player_speed * (secs * sg::normalize(sg::structure_cast<double>(player_v_)));
@@ -96,9 +96,10 @@ sg::EventList sg::GameState::update(UpdateDiff const &diff_secs) {
         found = true;
         ait->health -= projectile_damage;
         if (ait->health <= 0) {
-          this->asteroids_.erase(ait);
           score_ += ait->score;
           result.push_back(GameEvent::AsteroidDestroyed);
+          particles_.push_back(Particle{DoubleVector{0, 0}, Animation{explosion_animation, ait->position}});
+          this->asteroids_.erase(ait);
         }
         break;
       }
@@ -120,6 +121,17 @@ sg::EventList sg::GameState::update(UpdateDiff const &diff_secs) {
       last_shot_ = now;
     }
   }
+
+  // Handle particles
+  // Update/move particles
+  for (Particle &p : particles_) {
+    p.animation.move(p.velocity * secs);
+    p.animation.update(diff_secs);
+
+  }
+  // Remove stale particles
+  erase_if(particles_, [](sg::Particle const &v) { return v.animation.done(); });
+
   return result;
 }
 
@@ -154,6 +166,8 @@ sg::RenderObjectList sg::GameState::draw() {
     result.push_back(Image{sg::IntRectangle::from_pos_and_size(sg::rounding_cast<int>(p.position), p.size),
                            main_atlas_path,
                            asteroid_medium_path});
+  for (sg::GameState::ParticleVector ::value_type const &p : particles_)
+    append(result, p.animation.render());
   result.push_back(sg::Text{score_font, "Score: " + std::to_string(score_), IntVector{0, 0}, score_color});
   return result;
 }

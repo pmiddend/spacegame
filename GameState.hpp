@@ -7,6 +7,7 @@
 #include "RenderObject.hpp"
 #include "Console.hpp"
 #include "Animation.hpp"
+#include <utility>
 #include <vector>
 #include <list>
 
@@ -39,9 +40,10 @@ struct Asteroid {
 };
 
 struct Particle {
-  double lifetime;
   DoubleVector velocity;
   Animation animation;
+
+  Particle(const DoubleVector &velocity, Animation animation) : velocity(velocity), animation(std::move(animation)) {}
 };
 
 struct Projectile {
@@ -60,6 +62,7 @@ class GameState {
 public:
   using ProjectileVector = std::vector<Projectile>;
   using AsteroidVector = std::vector<Asteroid>;
+  using ParticleVector = std::vector<Particle>;
 
   GameState(RandomEngine &, Console &);
 
@@ -70,7 +73,7 @@ public:
 
   void add_player_v(IntVector const &);
 
-  EventList update(UpdateDiff const &);
+  EventList update(IntUpdateDiff const &);
 
   void player_shooting(bool b);
 
@@ -87,6 +90,7 @@ private:
   std::optional<TimePoint> last_shot_;
   ProjectileVector projectiles_;
   AsteroidVector asteroids_;
+  ParticleVector particles_;
   Score score_;
 
   void process_spawns(
