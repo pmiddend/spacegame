@@ -21,6 +21,9 @@ public:
     return *this;
   }
 
+  bool operator==(Vector<T> const &o) const {
+    return _x == o._x && _y == o._y;
+  }
 private:
   T _x;
   T _y;

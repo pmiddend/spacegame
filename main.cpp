@@ -16,15 +16,10 @@
 
 namespace {
 
-std::filesystem::path const base_path{std::filesystem::path{"data"}};
-std::filesystem::path const png_path{base_path / "PNG"};
-std::filesystem::path const main_atlas_path{png_path / "main-atlas.png"};
-std::filesystem::path const explosion_path{png_path / "explosion.png"};
-sg::IntVector const explosion_tile_size{64, 64};
-std::filesystem::path const background_music{base_path / "music.opus"};
-std::filesystem::path const pew_sound{base_path / "Bonus" / "sfx_laser1.wav"};
-std::filesystem::path const explosion_short_sound{base_path / "explosion-short.wav"};
-std::filesystem::path const font_path{base_path / "Bonus" / "kenvector_future_thin.ttf"};
+std::filesystem::path const background_music{sg::base_path / "music.opus"};
+std::filesystem::path const pew_sound{sg::base_path / "Bonus" / "sfx_laser1.wav"};
+std::filesystem::path const explosion_short_sound{sg::base_path / "explosion-short.wav"};
+std::filesystem::path const font_path{sg::base_path / "Bonus" / "kenvector_future_thin.ttf"};
 
 std::optional<sg::IntVector> key_to_direction(SDL_Keycode const &k) {
   if (k == SDLK_a)
@@ -38,38 +33,16 @@ std::optional<sg::IntVector> key_to_direction(SDL_Keycode const &k) {
   return std::nullopt;
 }
 
-class Animation {
-public:
-  Animation(sg::SDLTexture &, sg::IntVector const &);
-
-  sg::SDLTexture &texture() { return texture_; }
-
-  void render_nth_tile(sg::SDLRenderer &renderer, std::size_t, sg::IntRectangle const &) const;
-
-private:
-  sg::SDLTexture &texture_;
-  sg::IntVector tile_size_;
-};
-
-Animation::Animation(sg::SDLTexture &_texture, sg::IntVector const &_tile_size)
-        : texture_(_texture), tile_size_(_tile_size) {}
-
-void Animation::render_nth_tile(sg::SDLRenderer &renderer, std::size_t const i, sg::IntRectangle const &target) const {
-  int const per_row{texture_.size().x() / tile_size_.x()};
-  auto const pos = sg::IntVector{static_cast<int>(i % per_row), static_cast<int>(i / per_row)} * tile_size_;
-  renderer.copy(texture_, sg::IntRectangle::from_pos_and_size(pos, tile_size_), target);
-}
-
 struct RenderObjectVisitor {
   sg::SDLRenderer &renderer;
-  sg::Atlas &main_atlas;
+  sg::AtlasCache &atlas_cache;
   sg::FontCache &font_cache;
 
-  RenderObjectVisitor(sg::SDLRenderer &renderer, sg::Atlas &mainAtlas, sg::FontCache &font_cache)
-          : renderer{renderer}, main_atlas{mainAtlas}, font_cache{font_cache} {}
+  RenderObjectVisitor(sg::SDLRenderer &renderer, sg::AtlasCache &atlas_cache, sg::FontCache &font_cache)
+          : renderer{renderer}, atlas_cache{atlas_cache}, font_cache{font_cache} {}
 
   void operator()(sg::Image const &image) const {
-    main_atlas.render_tile(renderer, image.texture, image.rectangle);
+    atlas_cache.get(image.atlas).render_tile(renderer, image.texture, image.rectangle);
   }
 
   void operator()(sg::Solid const &s) const {
@@ -96,8 +69,8 @@ int main() {
   sg::RandomEngine random_engine;
   sg::GameState gs{random_engine, console};
   TextureCache texture_cache{image_context, renderer};
+  sg::AtlasCache atlas_cache{texture_cache};
   sg::FontCache font_cache{ttfcontext, renderer};
-  sg::Atlas main_atlas{texture_cache, main_atlas_path};
   //Animation explosion_animation{texture_cache.get_texture(explosion_path), explosion_tile_size};
   sg::SoundCache sound_cache{mixer_context};
   sg::Starfield star_field{random_engine};
@@ -135,8 +108,8 @@ int main() {
     }
 
     auto const second_delta{std::chrono::duration_cast<std::chrono::duration<double>>(time_delta)};
-    for (sg::GameEvent const &e : gs.update(second_delta)) {
-      switch (e) {
+    for (sg::GameEvent const &ge : gs.update(second_delta)) {
+      switch (ge) {
         case sg::GameEvent::PlayerShot:
           sound_cache.play_chunk(pew_sound);
           break;
@@ -149,11 +122,11 @@ int main() {
 
     renderer.clear();
     for (auto const &rob : star_field.draw())
-      std::visit(RenderObjectVisitor(renderer, main_atlas, font_cache), rob);
+      std::visit(RenderObjectVisitor(renderer, atlas_cache, font_cache), rob);
     for (const auto &rob : gs.draw())
-      std::visit(RenderObjectVisitor(renderer, main_atlas, font_cache), rob);
+      std::visit(RenderObjectVisitor(renderer, atlas_cache, font_cache), rob);
     for (const auto &rob : console.draw())
-      std::visit(RenderObjectVisitor(renderer, main_atlas, font_cache), rob);
+      std::visit(RenderObjectVisitor(renderer, atlas_cache, font_cache), rob);
     renderer.present();
   }
 }

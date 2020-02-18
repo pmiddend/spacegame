@@ -6,6 +6,7 @@
 #include "constants.hpp"
 #include "RenderObject.hpp"
 #include "Console.hpp"
+#include "Animation.hpp"
 #include <vector>
 #include <list>
 
@@ -37,6 +38,12 @@ struct Asteroid {
           : position{position}, size{size}, type{type}, health{health}, score{score} {}
 };
 
+struct Particle {
+  double lifetime;
+  DoubleVector velocity;
+  Animation animation;
+};
+
 struct Projectile {
   DoubleVector position;
   ProjectileType type;
@@ -63,7 +70,7 @@ public:
 
   void add_player_v(IntVector const &);
 
-  EventList update(std::chrono::duration<double> const &);
+  EventList update(UpdateDiff const &);
 
   void player_shooting(bool b);
 

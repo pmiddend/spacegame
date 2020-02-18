@@ -19,7 +19,7 @@ add_executable(spacegame
         RenderObject.hpp
         TexturePath.hpp
         GameState.hpp
-        GameState.cpp util.hpp FontCache.cpp lru.hpp Console.cpp Console.hpp)
+        GameState.cpp util.hpp FontCache.cpp lru.hpp Console.cpp Console.hpp Animation.cpp Animation.hpp)
 
 set_target_properties(spacegame PROPERTIES CXX_STANDARD 17)
 set_target_properties(spacegame PROPERTIES CXX_STANDARD_REQUIRED True)

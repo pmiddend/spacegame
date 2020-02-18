@@ -257,6 +257,7 @@ sg::SDLTTFFont::SDLTTFFont(SDLTTFFont &&other) noexcept {
 sg::SDLTTFFont &sg::SDLTTFFont::operator=(SDLTTFFont &&other) noexcept {
   this->font_ = other.font_;
   other.font_ = nullptr;
+  return *this;
 }
 
 sg::SDLSurface sg::SDLTTFFont::render_blended(std::string const &s, SDL_Color const &c) {

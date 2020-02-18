@@ -3,6 +3,7 @@
 #include "SDL.hpp"
 #include "TexturePath.hpp"
 #include "FontDescriptor.hpp"
+#include "Atlas.hpp"
 #include "types.hpp"
 
 namespace sg {
@@ -24,4 +25,7 @@ Color const console_font_color = {168, 176, 202, 255};
 FontDescriptor const console_font{std::filesystem::path{"data"} / "Bonus" / "kenvector_future.ttf", 15};
 FontDescriptor const score_font{std::filesystem::path{"data"} / "Bonus" / "kenvector_future.ttf", 17};
 Color const score_color = {168, 176, 202, 255};
+std::filesystem::path const base_path{std::filesystem::path{"data"}};
+std::filesystem::path const png_path{base_path / "PNG"};
+AtlasDescriptor const main_atlas_path{png_path / "main-atlas.png", std::nullopt};
 }

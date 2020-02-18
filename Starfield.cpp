@@ -3,16 +3,16 @@
 #include "Atlas.hpp"
 
 namespace {
-static unsigned star_count_per_layer(unsigned const layer_index) {
+unsigned star_count_per_layer(unsigned const layer_index) {
   return 85u * (layer_index + 1u) - 60u;
 }
 
-static sg::IntVector star_size_per_layer(unsigned const layer_index) {
+sg::IntVector star_size_per_layer(unsigned const layer_index) {
   double const size{26 - 7.5 * (layer_index + 1)};
   return sg::IntVector{static_cast<int>( size ), static_cast<int>( size )};
 }
 
-static double star_speed_per_layer(unsigned const layer_index) {
+double star_speed_per_layer(unsigned const layer_index) {
   return 266 - 75 * (layer_index + 1);
 }
 
@@ -72,7 +72,7 @@ sg::Starfield::draw() {
     for (sg::DoubleVector const &pos : (*layer_it)) {
       sg::IntRectangle const star_rect{sg::IntRectangle::from_pos_and_size(
               sg::structure_cast<int>(pos), star_size)};
-      result.push_back(Image{star_rect, star_path});
+      result.push_back(Image{star_rect, main_atlas_path, star_path});
     }
     layer_index--;
   }
