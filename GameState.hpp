@@ -11,7 +11,7 @@
 
 namespace sg {
 enum class GameEvent {
-  PlayerShot
+  PlayerShot, AsteroidDestroyed
 };
 enum class EnemyType {
   AsteroidMedium
@@ -23,6 +23,7 @@ struct EnemySpawn {
   EnemyType type;
   std::chrono::milliseconds spawn_after;
   DoubleVector spawn_position;
+  Score score;
 };
 
 struct Asteroid {
@@ -30,9 +31,10 @@ struct Asteroid {
   IntVector size;
   EnemyType type;
   Health health;
+  Score score;
 
-  Asteroid(const sg::DoubleVector &position, const sg::IntVector &size, EnemyType const &type, Health const health)
-          : position(position), size(size), type(type), health(health) {}
+  Asteroid(const sg::DoubleVector &position, const sg::IntVector &size, EnemyType const &type, Health const health, Score const score)
+          : position{position}, size{size}, type{type}, health{health}, score{score} {}
 };
 
 struct Projectile {
@@ -78,6 +80,7 @@ private:
   std::optional<TimePoint> last_shot_;
   ProjectileVector projectiles_;
   AsteroidVector asteroids_;
+  Score score_;
 
   void process_spawns(
           Clock::time_point::duration const &);

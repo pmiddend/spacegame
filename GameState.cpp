@@ -41,10 +41,11 @@ sg::GameState::GameState(RandomEngine &_random_engine, Console &_console)
         : random_engine_{_random_engine},
           console_{_console},
           game_start_{Clock::now()},
-          spawns_{EnemySpawn{sg::EnemyType::AsteroidMedium, std::chrono::milliseconds{2000}, DoubleVector{120, -43}}},
+          spawns_{EnemySpawn{sg::EnemyType::AsteroidMedium, std::chrono::milliseconds{2000}, DoubleVector{120, -43}, 1}},
           player_position_{sg::structure_cast<double>(game_size / 2 - player_size / 2)},
           player_v_{0, 0},
-          player_shooting_{false} {}
+          player_shooting_{false},
+          score_{0} {}
 
 void sg::GameState::add_player_v(sg::IntVector const &v) {
   player_v_ = sg::IntVector{player_v_.x() + v.x(), player_v_.y() + v.y()};
@@ -91,8 +92,11 @@ sg::EventList sg::GameState::update(UpdateDiff const &diff_secs) {
       if (rect_intersect(prect, asteroid_rect<double>(*ait))) {
         found = true;
         ait->health -= projectile_damage;
-        if (ait->health <= 0)
+        if (ait->health <= 0) {
           this->asteroids_.erase(ait);
+          score_ += ait->score;
+          result.push_back(GameEvent::AsteroidDestroyed);
+        }
         break;
       }
     }
@@ -123,13 +127,13 @@ void sg::GameState::process_spawns(Clock::time_point::duration const &elapsed_ti
     if (it->type == sg::EnemyType::AsteroidMedium) {
       auto size = sg::IntVector{42, 42};
       console_.add_line("spawning asteroid", true);
-      asteroids_.push_back(sg::Asteroid{it->spawn_position, size, it->type, enemy_type_to_health(it->type)});
+      asteroids_.push_back(sg::Asteroid{it->spawn_position, size, it->type, enemy_type_to_health(it->type), it->score});
     }
     it = spawns_.erase(it);
   }
 }
 
-void sg::GameState::player_shooting(bool b) {
+void sg::GameState::player_shooting(bool const b) {
   if (b == player_shooting_)
     return;
   player_shooting_ = b;
@@ -145,5 +149,6 @@ sg::RenderObjectList sg::GameState::draw() {
   for (sg::GameState::AsteroidVector::value_type const &p : asteroids_)
     result.push_back(Image{sg::IntRectangle::from_pos_and_size(sg::structure_cast<int>(p.position), p.size),
                            asteroid_medium_path});
+  result.push_back(sg::Text{score_font, "Score: " + std::to_string(score_), IntVector{0, 0}, score_color});
   return result;
 }

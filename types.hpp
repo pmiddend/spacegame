@@ -11,4 +11,5 @@ using Clock = std::chrono::system_clock;
 using TimePoint = Clock::time_point;
 using Color = SDL_Color;
 using Health = int;
+using Score = int;
 }

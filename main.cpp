@@ -23,6 +23,7 @@ std::filesystem::path const explosion_path{png_path / "explosion.png"};
 sg::IntVector const explosion_tile_size{64, 64};
 std::filesystem::path const background_music{base_path / "music.opus"};
 std::filesystem::path const pew_sound{base_path / "Bonus" / "sfx_laser1.wav"};
+std::filesystem::path const explosion_short_sound{base_path / "explosion-short.wav"};
 std::filesystem::path const font_path{base_path / "Bonus" / "kenvector_future_thin.ttf"};
 
 std::optional<sg::IntVector> key_to_direction(SDL_Keycode const &k) {
@@ -50,8 +51,8 @@ private:
   sg::IntVector tile_size_;
 };
 
-Animation::Animation(sg::SDLTexture &_texture, sg::IntVector const &_tile_size) : texture_(_texture),
-                                                                                  tile_size_(_tile_size) {}
+Animation::Animation(sg::SDLTexture &_texture, sg::IntVector const &_tile_size)
+        : texture_(_texture), tile_size_(_tile_size) {}
 
 void Animation::render_nth_tile(sg::SDLRenderer &renderer, std::size_t const i, sg::IntRectangle const &target) const {
   int const per_row{texture_.size().x() / tile_size_.x()};
@@ -107,8 +108,7 @@ int main() {
   while (true) {
     auto const this_frame{sg::Clock::now()};
     auto const time_delta{this_frame - last_frame};
-    auto const wait_time{std::chrono::duration_cast<std::chrono::milliseconds>(
-            target_fps - time_delta)};
+    auto const wait_time{std::chrono::duration_cast<std::chrono::milliseconds>(target_fps - time_delta)};
     last_frame = this_frame;
     std::optional<SDL_Event> const e{context.wait_event(wait_time)};
     if (e.has_value()) {
@@ -134,10 +134,17 @@ int main() {
       }
     }
 
-    auto const second_delta{
-            std::chrono::duration_cast<std::chrono::duration<double>>(time_delta)};
-    for (sg::GameEvent const &e : gs.update(second_delta))
-      sound_cache.play_chunk(pew_sound);
+    auto const second_delta{std::chrono::duration_cast<std::chrono::duration<double>>(time_delta)};
+    for (sg::GameEvent const &e : gs.update(second_delta)) {
+      switch (e) {
+        case sg::GameEvent::PlayerShot:
+          sound_cache.play_chunk(pew_sound);
+          break;
+        case sg::GameEvent::AsteroidDestroyed:
+          sound_cache.play_chunk(explosion_short_sound);
+          break;
+      }
+    }
     star_field.update(second_delta);
 
     renderer.clear();

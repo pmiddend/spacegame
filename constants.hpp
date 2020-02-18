@@ -22,4 +22,6 @@ TexturePath const star_path{"star.png"};
 Color const console_background_color = {43, 43, 43, 128};
 Color const console_font_color = {168, 176, 202, 255};
 FontDescriptor const console_font{std::filesystem::path{"data"} / "Bonus" / "kenvector_future.ttf", 15};
+FontDescriptor const score_font{std::filesystem::path{"data"} / "Bonus" / "kenvector_future.ttf", 17};
+Color const score_color = {168, 176, 202, 255};
 }
