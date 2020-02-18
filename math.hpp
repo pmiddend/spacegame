@@ -108,7 +108,7 @@ public:
 
   static Rectangle<T>
   from_center_and_size(Vector<T> const &center, Vector<T> const &size) {
-    return from_pos_and_size(center - size / 2, size);
+    return from_pos_and_size(center - size / static_cast<T>(2), size);
   }
 
   static Rectangle<T>

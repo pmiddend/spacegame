@@ -10,13 +10,14 @@
 #include <list>
 
 namespace sg {
-using Health = int;
-
 enum class GameEvent {
   PlayerShot
 };
 enum class EnemyType {
   AsteroidMedium
+};
+enum class ProjectileType {
+  StandardLaser
 };
 struct EnemySpawn {
   EnemyType type;
@@ -34,13 +35,21 @@ struct Asteroid {
           : position(position), size(size), type(type), health(health) {}
 };
 
+struct Projectile {
+  DoubleVector position;
+  ProjectileType type;
+
+  Projectile(const sg::DoubleVector &position, sg::ProjectileType type)
+          : position(position), type(type) {}
+};
+
 using EventList = std::vector<sg::GameEvent>;
 
 using SpawnList = std::list<sg::EnemySpawn>;
 
 class GameState {
 public:
-  using ProjectileVector = std::vector<DoubleVector>;
+  using ProjectileVector = std::vector<Projectile>;
   using AsteroidVector = std::vector<Asteroid>;
 
   GameState(RandomEngine &, Console &);
