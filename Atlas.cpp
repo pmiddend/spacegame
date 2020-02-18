@@ -1,4 +1,4 @@
-#include "atlas.hpp"
+#include "Atlas.hpp"
 #include <nlohmann/json.hpp>
 #include <fstream>
 
@@ -21,6 +21,6 @@ sg::Atlas::Atlas(TextureCache &textures, std::filesystem::path f) : texture_(tex
   }
 }
 
-void sg::Atlas::render_tile(sg::SDLRenderer &renderer, texture_path const &tile, const sg::IntRectangle &to) const {
+void sg::Atlas::render_tile(sg::SDLRenderer &renderer, TexturePath const &tile, const sg::IntRectangle &to) const {
   renderer.copy(texture_, atlas_.at(tile.path), to);
 }

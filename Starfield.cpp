@@ -1,6 +1,6 @@
-#include "starfield.hpp"
+#include "Starfield.hpp"
 #include "constants.hpp"
-#include "atlas.hpp"
+#include "Atlas.hpp"
 
 namespace {
 static unsigned star_count_per_layer(unsigned const layer_index) {

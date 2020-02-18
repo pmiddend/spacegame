@@ -2,7 +2,7 @@
 
 #include <map>
 #include <filesystem>
-#include "sdl.hpp"
+#include "SDL.hpp"
 
 namespace sg {
 class SoundCache {

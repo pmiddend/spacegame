@@ -1,10 +1,10 @@
 #pragma once
 
 #include <vector>
-#include "sdl.hpp"
+#include "SDL.hpp"
 #include "types.hpp"
-#include "atlas.hpp"
-#include "render_object.hpp"
+#include "Atlas.hpp"
+#include "RenderObject.hpp"
 
 namespace sg {
 class Starfield {

@@ -3,7 +3,7 @@
 #include <string>
 
 namespace sg {
-struct texture_path {
+struct TexturePath {
   std::string path;
 };
 }

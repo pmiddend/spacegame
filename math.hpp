@@ -80,6 +80,11 @@ Vector<T> operator/(Vector<T> const &a, T const &b) {
 }
 
 template <typename T>
+Vector<T> operator*(Vector<T> const &a, T const &b) {
+  return Vector(a.x() * b, a.y() * b);
+}
+
+template <typename T>
 std::ostream &operator<<(std::ostream &os, Vector<T> const &v) {
   return os << v.x() << "x" << v.y();
 }
@@ -101,6 +106,16 @@ public:
     return from_edges(pos, pos + size);
   }
 
+  static Rectangle<T>
+  from_center_and_size(Vector<T> const &center, Vector<T> const &size) {
+    return from_pos_and_size(center - size / 2, size);
+  }
+
+  static Rectangle<T>
+  from_size_at_origin(Vector<T> const &size) {
+    return from_edges(Vector<T>{0, 0}, size);
+  }
+
   T const &left() const { return _left; }
   T const &right() const { return _right; }
   T const &top() const { return _top; }
@@ -109,6 +124,17 @@ public:
   T h() const { return _bottom - _top; }
   T w() const { return _right - _left; }
 
+  Vector<T> position() const {
+    return Vector<T>{this->_left, this->_top};
+  }
+
+  Vector<T> center() const {
+    return Vector<T>{this->_left + this->w() / 2, this->_top + this->h() / 2};
+  }
+
+  Vector<T> size() const {
+    return Vector<T>{this->w(), this->h()};
+  }
 private:
   T _left;
   T _right;
@@ -127,6 +153,12 @@ bool rect_intersect(Rectangle<T> const &outer, Rectangle<T> const &inner) {
   auto const H1 = outer.h();
   auto const H2 = inner.h();
   return !(X1 + W1 < X2 || X2 + W2 < X1 || Y1 + H1 < Y2 || Y2 + H2 < Y1);
+}
+
+template<typename T>
+Rectangle<T> embiggen(Rectangle<T> const &r, T const factor) {
+  auto const new_size{r.size() * factor};
+  return Rectangle<T>::from_center_and_size(r.center(), new_size);
 }
 
 template <typename T, typename F>

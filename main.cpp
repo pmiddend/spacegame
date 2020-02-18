@@ -1,12 +1,14 @@
 #include "math.hpp"
-#include "sdl.hpp"
+#include "SDL.hpp"
 #include "types.hpp"
 #include "constants.hpp"
-#include "game_state.hpp"
-#include "starfield.hpp"
+#include "GameState.hpp"
+#include "Starfield.hpp"
 #include "sound_cache.hpp"
-#include "texture_cache.hpp"
-#include "atlas.hpp"
+#include "TextureCache.hpp"
+#include "Atlas.hpp"
+#include "FontCache.hpp"
+#include "Console.hpp"
 #include <SDL.h>
 #include <chrono>
 #include <iostream>
@@ -60,46 +62,50 @@ void Animation::render_nth_tile(sg::SDLRenderer &renderer, std::size_t const i, 
 struct RenderObjectVisitor {
   sg::SDLRenderer &renderer;
   sg::Atlas &main_atlas;
+  sg::FontCache &font_cache;
 
-  RenderObjectVisitor(sg::SDLRenderer &renderer, sg::Atlas &mainAtlas) : renderer(renderer), main_atlas(mainAtlas) {}
+  RenderObjectVisitor(sg::SDLRenderer &renderer, sg::Atlas &mainAtlas, sg::FontCache &font_cache)
+          : renderer{renderer}, main_atlas{mainAtlas}, font_cache{font_cache} {}
 
   void operator()(sg::Image const &image) const {
     main_atlas.render_tile(renderer, image.texture, image.rectangle);
   }
 
-  void operator()(sg::Solid const &) const {
-
+  void operator()(sg::Solid const &s) const {
+    renderer.fill_rect(s.rectangle, s.color);
   }
 
-  void operator()(sg::Text const &) const {
-
+  void operator()(sg::Text const &t) const {
+    font_cache.copy_text(t.font, t.text, t.color, t.position);
   }
 };
+
+
 } // namespace
 
 int main() {
+  sg::Console console{};
   sg::SDLContext context;
   sg::SDLMixerContext mixer_context{context};
   sg::SDLImageContext image_context;
-  sg::SDLWindow window{context.create_window(game_size)};
+  sg::SDLWindow window{context.create_window(sg::game_size)};
   sg::SDLTTFContext ttfcontext;
   sg::SDLTTFFont main_font{ttfcontext.open_font(font_path, 15)};
-  sg::SDLRenderer renderer{window.create_renderer(game_size)};
-  sg::SDLSurface ship_surface{image_context.load_surface(
-          std::filesystem::path{"data"} / "PNG" / "playerShip1_blue.png")};
-  RandomEngine random_engine;
-  sg::GameState gs{random_engine};
+  sg::SDLRenderer renderer{window.create_renderer(sg::game_size)};
+  sg::RandomEngine random_engine;
+  sg::GameState gs{random_engine, console};
   TextureCache texture_cache{image_context, renderer};
+  sg::FontCache font_cache{ttfcontext, renderer};
   sg::Atlas main_atlas{texture_cache, main_atlas_path};
-  Animation explosion_animation{texture_cache.get_texture(explosion_path), explosion_tile_size};
+  //Animation explosion_animation{texture_cache.get_texture(explosion_path), explosion_tile_size};
   sg::SoundCache sound_cache{mixer_context};
   sg::Starfield star_field{random_engine};
   std::cout << "game start\n";
   mixer_context.play_music(background_music);
-  auto last_frame = Clock::now();
+  auto last_frame = sg::Clock::now();
   auto const target_fps = std::chrono::milliseconds{16};
   while (true) {
-    auto const this_frame{Clock::now()};
+    auto const this_frame{sg::Clock::now()};
     auto const time_delta{this_frame - last_frame};
     auto const wait_time{std::chrono::duration_cast<std::chrono::milliseconds>(
             target_fps - time_delta)};
@@ -112,6 +118,8 @@ int main() {
       if (e.value().type == SDL_KEYDOWN && e.value().key.repeat == 0) {
         if (e.value().key.keysym.sym == SDLK_ESCAPE)
           break;
+        if (e.value().key.keysym.sym == SDLK_x)
+          console.toggle();
         if (e.value().key.keysym.sym == SDLK_SPACE)
           gs.player_shooting(true);
         auto const direction = key_to_direction(e.value().key.keysym.sym);
@@ -134,9 +142,11 @@ int main() {
 
     renderer.clear();
     for (auto const &rob : star_field.draw())
-      std::visit(RenderObjectVisitor(renderer, main_atlas), rob);
-    for (const auto& rob : gs.draw())
-      std::visit(RenderObjectVisitor(renderer, main_atlas), rob);
+      std::visit(RenderObjectVisitor(renderer, main_atlas, font_cache), rob);
+    for (const auto &rob : gs.draw())
+      std::visit(RenderObjectVisitor(renderer, main_atlas, font_cache), rob);
+    for (const auto &rob : console.draw())
+      std::visit(RenderObjectVisitor(renderer, main_atlas, font_cache), rob);
     renderer.present();
   }
 }

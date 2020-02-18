@@ -1,12 +1,12 @@
 #include <algorithm>
 #include <iostream>
-#include "game_state.hpp"
+#include "GameState.hpp"
 
 namespace {
 sg::DoubleVector enemy_type_to_speed(sg::EnemyType const &t) {
   switch (t) {
     case sg::EnemyType::AsteroidMedium:
-      return asteroid_medium_speed;
+      return sg::asteroid_medium_speed;
   }
   throw std::runtime_error("cannot determine speed for enemy type");
 }
@@ -25,8 +25,9 @@ void erase_if(Container &container, F const &f) {
 }
 }
 
-sg::GameState::GameState(RandomEngine &_random_engine)
-        : random_engine_(_random_engine),
+sg::GameState::GameState(RandomEngine &_random_engine, Console &_console)
+        : random_engine_{_random_engine},
+          console_{_console},
           game_start_{Clock::now()},
           spawns_{EnemySpawn{sg::EnemyType::AsteroidMedium, std::chrono::milliseconds{2000}, DoubleVector{120, -43}}},
           player_position_{sg::structure_cast<double>(
@@ -49,17 +50,22 @@ sg::EventList sg::GameState::update(UpdateDiff const &diff_secs) {
   for (ProjectileVector::size_type i{0}; i < projectiles_.size(); ++i)
     projectiles_[i] = projectiles_[i] + secs * sg::DoubleVector{0, projectile_speed};
 
-  erase_if(projectiles_, [](sg::DoubleVector const &v) {
-    return !sg::rect_intersect(game_rect,
+  auto const bigger_game_rect(embiggen(game_rect, 2));
+  erase_if(projectiles_, [&bigger_game_rect](sg::DoubleVector const &v) {
+    return !sg::rect_intersect(bigger_game_rect,
                                sg::IntRectangle::from_pos_and_size(sg::structure_cast<int>(v), projectile_size));
   });
 
   for (Asteroid &asteroid : asteroids_)
-    asteroid.position += enemy_type_to_speed(asteroid.type);
+    asteroid.position += secs * enemy_type_to_speed(asteroid.type);
 
-  erase_if(asteroids_, [](sg::Asteroid const &v) {
-    return !sg::rect_intersect(game_rect,
-                               sg::IntRectangle::from_pos_and_size(sg::structure_cast<int>(v.position), v.size));
+  erase_if(asteroids_, [&bigger_game_rect, this](sg::Asteroid const &v) {
+    bool const result{!sg::rect_intersect(bigger_game_rect,
+                                          sg::IntRectangle::from_pos_and_size(sg::structure_cast<int>(v.position),
+                                                                              v.size))};
+    if (result)
+      console_.add_line("removing asteroid", true);
+    return result;
   });
 
   auto const now = Clock::now();
@@ -80,7 +86,7 @@ void sg::GameState::process_spawns(
       break;
     if (it->type == sg::EnemyType::AsteroidMedium) {
       auto size = sg::IntVector{43, 43};
-      std::cout << "spawning asteroid\n";
+      console_.add_line("spawning asteroid", true);
       asteroids_.push_back(sg::Asteroid{it->spawn_position, size, it->type, enemy_type_to_health(it->type)});
     }
     it = spawns_.erase(it);
@@ -100,5 +106,8 @@ sg::RenderObjectList sg::GameState::draw() {
   for (sg::GameState::ProjectileVector::value_type const &p : projectiles_)
     result.push_back(Image{sg::IntRectangle::from_pos_and_size(sg::structure_cast<int>(p), projectile_size),
                            laser_path});
+  for (sg::GameState::AsteroidVector::value_type const &p : asteroids_)
+    result.push_back(Image{sg::IntRectangle::from_pos_and_size(sg::structure_cast<int>(p.position), p.size),
+                           asteroid_medium_path});
   return result;
 }

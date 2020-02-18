@@ -1,10 +1,11 @@
 #pragma once
 
 #include "math.hpp"
-#include "sdl.hpp"
+#include "SDL.hpp"
 #include "types.hpp"
 #include "constants.hpp"
-#include "render_object.hpp"
+#include "RenderObject.hpp"
+#include "Console.hpp"
 #include <vector>
 #include <list>
 
@@ -42,7 +43,7 @@ public:
   using ProjectileVector = std::vector<DoubleVector>;
   using AsteroidVector = std::vector<Asteroid>;
 
-  explicit GameState(RandomEngine &);
+  GameState(RandomEngine &, Console &);
 
   [[nodiscard]] IntRectangle player_rect() const {
     return sg::IntRectangle::from_pos_and_size(
@@ -59,6 +60,7 @@ public:
 
 private:
   RandomEngine &random_engine_;
+  Console &console_;
   Clock::time_point game_start_;
   SpawnList spawns_;
   DoubleVector player_position_;

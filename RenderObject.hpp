@@ -4,15 +4,16 @@
 #include <variant>
 #include <string>
 #include <vector>
-#include "sdl.hpp"
-#include "texture_path.hpp"
+#include "SDL.hpp"
+#include "TexturePath.hpp"
+#include "FontDescriptor.hpp"
 
 namespace sg {
 struct Image {
   IntRectangle rectangle;
-  texture_path texture;
+  TexturePath texture;
 
-  Image(const IntRectangle &rectangle, texture_path texture) : rectangle(rectangle), texture(std::move(texture)) {}
+  Image(const IntRectangle &rectangle, TexturePath texture) : rectangle(rectangle), texture(std::move(texture)) {}
 };
 
 struct Solid {
@@ -23,7 +24,10 @@ struct Solid {
 };
 
 struct Text {
+  FontDescriptor font;
   std::string text;
+  IntVector position;
+  SDL_Color color;
 };
 
 using RenderObject = std::variant<Image, Solid, Text>;

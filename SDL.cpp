@@ -1,11 +1,15 @@
-#include "sdl.hpp"
+#include "SDL.hpp"
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
 #include <iostream>
 
 namespace {
-template <typename T>
+std::string sdl_error_string() {
+  return std::string{SDL_GetError()};
+}
+
+template<typename T>
 SDL_Rect to_sdl_rect(sg::Rectangle<T> const &r) {
   auto const ri = sg::structure_cast<int>(r);
   return {ri.left(), ri.top(), ri.w(), ri.h()};
@@ -16,14 +20,19 @@ sg::IntVector get_texture_size(SDL_Texture *texture) {
   int access, w, h;
   if (SDL_QueryTexture(texture, &format, &access, &w, &h) < 0) {
     throw std::runtime_error{"couldn't get texture information: " +
-                             std::string{SDL_GetError()}};
+                             sdl_error_string()};
   }
   return sg::IntVector{w, h};
 }
+
 } // namespace
 
 sg::SDLRenderer::SDLRenderer(SDL_Renderer *const _renderer)
-    : _renderer(_renderer) {}
+        : _renderer(_renderer) {
+  if (SDL_SetRenderDrawBlendMode(this->_renderer, SDL_BLENDMODE_BLEND) != 0)
+    throw std::runtime_error{"couldn't set blend mode: " +
+                             sdl_error_string()};
+}
 
 sg::SDLRenderer::~SDLRenderer() { SDL_DestroyRenderer(_renderer); }
 
@@ -32,17 +41,17 @@ sg::SDLSurface::SDLSurface(SDL_Surface *const _surface) : _surface(_surface) {}
 sg::SDLSurface::~SDLSurface() { SDL_FreeSurface(_surface); }
 
 sg::SDLTexture::SDLTexture(SDL_Texture *const _texture)
-    : _texture(_texture), _size(get_texture_size(_texture)) {}
+        : _texture(_texture), _size(get_texture_size(_texture)) {}
 
-sg::SDLTexture::SDLTexture(SDLTexture &&_texture)
-    : _texture(_texture._texture), _size(_texture._size) {
+sg::SDLTexture::SDLTexture(SDLTexture &&_texture) noexcept
+        : _texture(_texture._texture), _size(_texture._size) {
   _texture._texture = nullptr;
 }
 
-sg::SDLTexture &sg::SDLTexture::operator=(SDLTexture &&other) {
-    _texture = other._texture;
-    other._texture = nullptr;
-    return *this;
+sg::SDLTexture &sg::SDLTexture::operator=(SDLTexture &&other) noexcept {
+  _texture = other._texture;
+  other._texture = nullptr;
+  return *this;
 }
 
 sg::SDLSurface::SDLSurface(SDLSurface &&o) : _surface(o._surface) {
@@ -65,13 +74,13 @@ sg::SDLWindow::~SDLWindow() { SDL_DestroyWindow(_window); }
 
 sg::SDLRenderer sg::SDLWindow::create_renderer(IntVector const &v) {
   SDL_Renderer *const renderer{
-      SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED)};
+          SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED)};
   if (renderer == nullptr)
     throw std::runtime_error{"couldn't initialize renderer: " +
-                             std::string{SDL_GetError()}};
+                             sdl_error_string()};
   if (SDL_RenderSetLogicalSize(renderer, v.x(), v.y()) < 0)
     throw std::runtime_error{"couldn't initialize renderer (logical size): " +
-                             std::string{SDL_GetError()}};
+                             sdl_error_string()};
   return SDLRenderer{renderer};
 }
 
@@ -87,7 +96,7 @@ sg::SDLImageContext::~SDLImageContext() { IMG_Quit(); }
 sg::SDLContext::SDLContext() {
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
     throw std::runtime_error{"couldn't initialize SDL: " +
-                             std::string{SDL_GetError()}};
+                             sdl_error_string()};
 }
 
 std::optional<SDL_Event>
@@ -103,15 +112,15 @@ sg::SDLContext::~SDLContext() { SDL_Quit(); }
 
 sg::SDLWindow sg::SDLContext::create_window(IntVector const &v) {
   SDL_Window *const window{SDL_CreateWindow(
-      "spacegame",
-      SDL_WINDOWPOS_UNDEFINED,
-      SDL_WINDOWPOS_UNDEFINED,
-      v.x(),
-      v.y(),
-      SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE)};
+          "spacegame",
+          SDL_WINDOWPOS_UNDEFINED,
+          SDL_WINDOWPOS_UNDEFINED,
+          v.x(),
+          v.y(),
+          SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE)};
   if (window == nullptr)
     throw std::runtime_error{"couldn't initialize window: " +
-                             std::string{SDL_GetError()}};
+                             sdl_error_string()};
   return SDLWindow{window};
 }
 
@@ -126,78 +135,99 @@ sg::SDLImageContext::load_surface(std::filesystem::path const &p) {
 
 sg::SDLTexture sg::SDLRenderer::create_texture(SDLSurface &s) {
   SDL_Texture *const texture =
-      SDL_CreateTextureFromSurface(_renderer, s.surface());
+          SDL_CreateTextureFromSurface(_renderer, s.surface());
   if (texture == nullptr)
     throw std::runtime_error{"couldn't convert surface to texture " +
-                             std::string{SDL_GetError()}};
+                             sdl_error_string()};
   return SDLTexture{texture};
 }
 
 void sg::SDLRenderer::clear() { SDL_RenderClear(_renderer); }
+
 void sg::SDLRenderer::copy_whole(SDLTexture &t, IntRectangle const &r) {
   auto const dest_rect = to_sdl_rect(r);
   SDL_RenderCopy(_renderer, t.texture(), nullptr, &dest_rect);
 }
+
 void sg::SDLRenderer::copy(SDLTexture &t, IntRectangle const &from, IntRectangle const &to) {
   auto const from_rect = to_sdl_rect(from);
   auto const to_rect = to_sdl_rect(to);
   SDL_RenderCopy(_renderer, t.texture(), &from_rect, &to_rect);
 }
+
 void sg::SDLRenderer::present() { SDL_RenderPresent(_renderer); }
 
-sg::SDLMixerContext::SDLMixerContext(SDLContext const &): lib_inited_{false}, music_{nullptr} {
-    if (Mix_Init(MIX_INIT_OPUS) != MIX_INIT_OPUS)
-        throw std::runtime_error{"couldn't initialize SDL mixer: " + std::string{Mix_GetError()}};
-    lib_inited_ = true;
+void sg::SDLRenderer::fill_rect(IntRectangle const &ext_rect, SDL_Color const &c) {
+  const SDL_Rect &rect = to_sdl_rect(ext_rect);
+  Uint8 r, g, b, a;
+  if (SDL_GetRenderDrawColor(this->_renderer, &r, &g, &b, &a) != 0)
+    throw std::runtime_error{"couldn't get render draw color " +
+                             sdl_error_string()};
+  if (SDL_SetRenderDrawColor(this->_renderer, c.r, c.g, c.b, c.a) != 0)
+    throw std::runtime_error{"couldn't set render draw color " +
+                             sdl_error_string()};
+  if (SDL_RenderFillRect(this->_renderer, &rect) != 0)
+    throw std::runtime_error{"couldn't fill rect " +
+                             sdl_error_string()};
+  if (SDL_SetRenderDrawColor(this->_renderer, r, g, b, a) != 0)
+    throw std::runtime_error{"couldn't set render draw color " +
+                             sdl_error_string()};
 
-    if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1)
-        throw std::runtime_error{"couldn't open audio in SDL mixer: " + std::string{Mix_GetError()}};
+}
+
+sg::SDLMixerContext::SDLMixerContext(SDLContext const &) : lib_inited_{false}, music_{nullptr} {
+  if (Mix_Init(MIX_INIT_OPUS) != MIX_INIT_OPUS)
+    throw std::runtime_error{"couldn't initialize SDL mixer: " + std::string{Mix_GetError()}};
+  lib_inited_ = true;
+
+  if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1)
+    throw std::runtime_error{"couldn't open audio in SDL mixer: " + std::string{Mix_GetError()}};
 }
 
 sg::SDLMixerContext::~SDLMixerContext() {
-    if (lib_inited_)
-        Mix_CloseAudio();
-    Mix_Quit();
+  if (lib_inited_)
+    Mix_CloseAudio();
+  Mix_Quit();
 }
 
 void sg::SDLMixerContext::play_music(std::filesystem::path const &p) {
-    if (music_ != nullptr) {
-        Mix_FreeMusic(music_);
-        music_ = nullptr;
-    }
-    music_ = Mix_LoadMUS(p.c_str());
-    if (music_ == nullptr)
-        throw std::runtime_error{"couldn't load music " + p.string() + ": " + std::string{Mix_GetError()}};
-    if (Mix_PlayMusic(music_, -1) == -1)
-        throw std::runtime_error{"couldn't play music " + p.string() + ": " + std::string{Mix_GetError()}};
-    Mix_VolumeMusic(MIX_MAX_VOLUME / 10);
+  if (music_ != nullptr) {
+    Mix_FreeMusic(music_);
+    music_ = nullptr;
+  }
+  music_ = Mix_LoadMUS(p.c_str());
+  if (music_ == nullptr)
+    throw std::runtime_error{"couldn't load music " + p.string() + ": " + std::string{Mix_GetError()}};
+  if (Mix_PlayMusic(music_, -1) == -1)
+    throw std::runtime_error{"couldn't play music " + p.string() + ": " + std::string{Mix_GetError()}};
+  Mix_VolumeMusic(MIX_MAX_VOLUME / 10);
 }
 
-sg::SDLMixerChunk::SDLMixerChunk(Mix_Chunk *_chunk): chunk_(_chunk) {
+sg::SDLMixerChunk::SDLMixerChunk(Mix_Chunk *_chunk) : chunk_(_chunk) {
 }
 
-sg::SDLMixerChunk::SDLMixerChunk(SDLMixerChunk &&other): chunk_(other.chunk_) {
-    other.chunk_ = nullptr;
+sg::SDLMixerChunk::SDLMixerChunk(SDLMixerChunk &&other) : chunk_(other.chunk_) {
+  other.chunk_ = nullptr;
 }
 
 sg::SDLMixerChunk::~SDLMixerChunk() {
-    Mix_FreeChunk(chunk_);
+  Mix_FreeChunk(chunk_);
 }
 
 sg::SDLMixerChunk sg::SDLMixerContext::load_chunk(std::filesystem::path const &p) {
-    Mix_Chunk *const chunk = Mix_LoadWAV(p.c_str());
-    if (chunk == nullptr)
-        throw std::runtime_error{"couldn't load "+p.string()+": "+std::string{Mix_GetError()}};
-    return sg::SDLMixerChunk(chunk);
+  Mix_Chunk *const chunk = Mix_LoadWAV(p.c_str());
+  if (chunk == nullptr)
+    throw std::runtime_error{"couldn't load " + p.string() + ": " + std::string{Mix_GetError()}};
+  return sg::SDLMixerChunk(chunk);
 }
 
 void sg::SDLMixerContext::play_chunk(SDLMixerChunk &chunk) {
-    Mix_PlayChannel(-1, chunk.chunk(), 0);
+  Mix_PlayChannel(-1, chunk.chunk(), 0);
 }
 
 sg::SDLTTFContext::SDLTTFContext() {
   if (TTF_Init() == -1)
-    throw std::runtime_error{"couldn't init TTF: "+std::string{TTF_GetError()}};
+    throw std::runtime_error{"couldn't init TTF: " + std::string{TTF_GetError()}};
 }
 
 sg::SDLTTFContext::~SDLTTFContext() {
@@ -205,14 +235,14 @@ sg::SDLTTFContext::~SDLTTFContext() {
 }
 
 sg::SDLTTFFont sg::SDLTTFContext::open_font(std::filesystem::path const &p, unsigned const pt) {
-  TTF_Font * const font{TTF_OpenFont(p.c_str(), pt)};
+  TTF_Font *const font{TTF_OpenFont(p.c_str(), pt)};
   if (font == nullptr)
-    throw std::runtime_error{"couldn't load "+p.string()+": "+std::string{TTF_GetError()}};
+    throw std::runtime_error{"couldn't load " + p.string() + ": " + std::string{TTF_GetError()}};
   return SDLTTFFont{font};
 }
 
 
-sg::SDLTTFFont::SDLTTFFont(TTF_Font *_font): font_{_font} {
+sg::SDLTTFFont::SDLTTFFont(TTF_Font *_font) : font_{_font} {
 }
 
 sg::SDLTTFFont::SDLTTFFont(SDLTTFFont &&other) {

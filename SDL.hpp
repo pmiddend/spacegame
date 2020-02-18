@@ -26,8 +26,8 @@ public:
 */
   SDLTexture &operator=(SDLTexture const &texture) = delete;
 
-  SDLTexture(SDLTexture &&);
-  SDLTexture &operator=(SDLTexture &&);
+  SDLTexture(SDLTexture &&) noexcept;
+  SDLTexture &operator=(SDLTexture &&) noexcept;
 
   ~SDLTexture();
 private:
@@ -62,6 +62,7 @@ public:
   void copy_whole(SDLTexture &, IntRectangle const &);
   void copy(SDLTexture &, IntRectangle const &from, IntRectangle const &to);
   void present();
+  void fill_rect(IntRectangle const &, SDL_Color const &);
 
   ~SDLRenderer();
 
