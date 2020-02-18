@@ -118,7 +118,7 @@ int main() {
       if (e.value().type == SDL_KEYDOWN && e.value().key.repeat == 0) {
         if (e.value().key.keysym.sym == SDLK_ESCAPE)
           break;
-        if (e.value().key.keysym.sym == SDLK_x)
+        if (e.value().key.keysym.sym == SDLK_BACKQUOTE)
           console.toggle();
         if (e.value().key.keysym.sym == SDLK_SPACE)
           gs.player_shooting(true);

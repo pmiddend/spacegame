@@ -10,6 +10,5 @@ using RandomEngine = std::default_random_engine;
 using Clock = std::chrono::system_clock;
 using TimePoint = Clock::time_point;
 using Color = SDL_Color;
-using DoubleRectangle = sg::Rectangle<double>;
 using Health = int;
 }

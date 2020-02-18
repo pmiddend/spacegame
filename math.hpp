@@ -171,4 +171,10 @@ template <typename U, typename T>
 Rectangle<U> structure_cast(Rectangle<T> const &r) {
   return rect_map(r, [](T const &t) { return static_cast<U>(t); });
 }
+
+using IntVector = Vector<int>;
+using DoubleVector = Vector<double>;
+using IntRectangle = Rectangle<int>;
+using DoubleRectangle = Rectangle<int>;
+
 } // namespace sg

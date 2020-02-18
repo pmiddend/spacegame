@@ -54,21 +54,19 @@ sg::SDLTexture &sg::SDLTexture::operator=(SDLTexture &&other) noexcept {
   return *this;
 }
 
-sg::SDLSurface::SDLSurface(SDLSurface &&o) : _surface(o._surface) {
+sg::SDLSurface::SDLSurface(SDLSurface &&o) noexcept : _surface(o._surface) {
   o._surface = nullptr;
 }
 
-sg::SDLRenderer::SDLRenderer(SDLRenderer &&o) : _renderer(o._renderer) {
-  o._renderer = nullptr;
+sg::SDLSurface &sg::SDLSurface::operator=(SDLSurface &&o) noexcept {
+  this->_surface = o._surface;
+  o._surface = nullptr;
+  return *this;
 }
 
 sg::SDLTexture::~SDLTexture() { SDL_DestroyTexture(_texture); }
 
 sg::SDLWindow::SDLWindow(SDL_Window *const _window) : _window(_window) {}
-
-sg::SDLWindow::SDLWindow(SDLWindow &&_window) : _window(_window._window) {
-  _window._window = nullptr;
-}
 
 sg::SDLWindow::~SDLWindow() { SDL_DestroyWindow(_window); }
 
@@ -85,8 +83,8 @@ sg::SDLRenderer sg::SDLWindow::create_renderer(IntVector const &v) {
 }
 
 sg::SDLImageContext::SDLImageContext() {
-  unsigned imgFlags = IMG_INIT_PNG;
-  if (!(IMG_Init(imgFlags) & imgFlags))
+  int const imgFlags{IMG_INIT_PNG};
+  if (!(IMG_Init(imgFlags) & imgFlags)) // NOLINT(hicpp-signed-bitwise)
     throw std::runtime_error{"couldn't initialize sdl image context: " +
                              std::string{IMG_GetError()}};
 }
@@ -206,8 +204,14 @@ void sg::SDLMixerContext::play_music(std::filesystem::path const &p) {
 sg::SDLMixerChunk::SDLMixerChunk(Mix_Chunk *_chunk) : chunk_(_chunk) {
 }
 
-sg::SDLMixerChunk::SDLMixerChunk(SDLMixerChunk &&other) : chunk_(other.chunk_) {
+sg::SDLMixerChunk::SDLMixerChunk(SDLMixerChunk &&other) noexcept : chunk_(other.chunk_) {
   other.chunk_ = nullptr;
+}
+
+sg::SDLMixerChunk &sg::SDLMixerChunk::operator=(SDLMixerChunk &&other) noexcept {
+  this->chunk_ = other.chunk_;
+  other.chunk_ = nullptr;
+  return *this;
 }
 
 sg::SDLMixerChunk::~SDLMixerChunk() {
@@ -235,7 +239,7 @@ sg::SDLTTFContext::~SDLTTFContext() {
 }
 
 sg::SDLTTFFont sg::SDLTTFContext::open_font(std::filesystem::path const &p, unsigned const pt) {
-  TTF_Font *const font{TTF_OpenFont(p.c_str(), pt)};
+  TTF_Font *const font{TTF_OpenFont(p.c_str(), static_cast<int>(pt))};
   if (font == nullptr)
     throw std::runtime_error{"couldn't load " + p.string() + ": " + std::string{TTF_GetError()}};
   return SDLTTFFont{font};
@@ -245,8 +249,13 @@ sg::SDLTTFFont sg::SDLTTFContext::open_font(std::filesystem::path const &p, unsi
 sg::SDLTTFFont::SDLTTFFont(TTF_Font *_font) : font_{_font} {
 }
 
-sg::SDLTTFFont::SDLTTFFont(SDLTTFFont &&other) {
+sg::SDLTTFFont::SDLTTFFont(SDLTTFFont &&other) noexcept {
   font_ = other.font_;
+  other.font_ = nullptr;
+}
+
+sg::SDLTTFFont &sg::SDLTTFFont::operator=(SDLTTFFont &&other) noexcept {
+  this->font_ = other.font_;
   other.font_ = nullptr;
 }
 
